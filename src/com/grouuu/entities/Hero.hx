@@ -15,7 +15,6 @@ class Hero extends Entity
 	public var heat(default, null):Float;
 	public var energy(default, null):Float;
 	public var radiation(default, null):Float;
-	public var gravity(default, null):Float;
 	public var speed(default, null):Float;
 	public var oxygene(default, null):Float;
 	public var armor(default, null):Float;
@@ -31,7 +30,7 @@ class Hero extends Entity
 	public function changeHeat(value:Float):Float		{ heat = value; return heat; }
 	public function changeEnergy(value:Float):Float		{ energy = value; return energy; }
 	public function changeRadiation(value:Float):Float	{ radiation = value; return radiation; }
-	public function changeGravity(value:Float):Float	{ gravity = value; return gravity; }
+	//public function changeGravity(value:Float):Float	{ gravity = value; return gravity; }
 	public function changeSpeed(value:Float):Float		{ speed = value; return speed; }
 	public function changeOxygene(value:Float):Float	{ oxygene = value; return oxygene; }
 	public function changeArmor(value:Float):Float		{ armor = value; return armor; }
@@ -52,12 +51,33 @@ class Hero extends Entity
 	{
 		return getY() - layerWorld.y;
 	}
+	
+	public function getRotation():Float
+	{
+		return bmp.rotation; // in rad
+		//return bmp.rotation * 180 / Math.PI; // in degree
+	}
 
 	override public function distanceFrom(other:Entity):Float
+	{
+		throw "Don't use this method, use instead distanceFromWorld";
+		
+		return 0.0;
+	}
+	
+	public function distanceFromWorld(other:Entity):Float
 	{
 		var dx = getWorldX() - other.getX();
 		var dy = getWorldY() - other.getY();
 		
 		return Math.sqrt(dx * dx + dy * dy);
+	}
+	
+	public function angleFromWorld(other:Entity):Float
+	{
+		var dx = other.getX() - getWorldX();
+		var dy = other.getY() - getWorldY();
+		
+		return Math.atan2(dy, dx);
 	}
 }

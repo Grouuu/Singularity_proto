@@ -60,6 +60,7 @@ class Main extends App
 		ent_planet.resize(200, 200);
 		ent_planet.center();
 		ent_planet.radiusMin = 200;
+		ent_planet.gravity = 500;
 		
 		// hero ---------------------------------
 		
@@ -71,7 +72,7 @@ class Main extends App
 		
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
-		ent_hero.rotation(45);
+		ent_hero.rotation(90);
 		
 		// entities -----------------------------
 		
@@ -79,11 +80,6 @@ class Main extends App
 		listEntities.push(ent_planet);
 		
 		// path ---------------------------------
-		
-		// TODO : path
-		//var curve:Spiro
-		// https://github.com/nanjizal/hxSpiroKhaG2/tree/master/Source/spiroHelpers
-		// https://github.com/nanjizal/hxSpiro
 		
 		img_path = new Graphics(s2d);
 		img_path.lineStyle(5, 0xFF0000);
@@ -130,19 +126,86 @@ class Main extends App
 		
 		// path ---------------------------------
 		
-		var p:Array<Int> = path.getPath();
+		var p:Array<Float> = getPath();
 		
 		img_path.clear();
 		img_path.lineStyle(5, 0xFF0000);
 		
-		img_path.moveTo(ent_hero.getWorldX(), ent_hero.getWorldY());
+		img_path.moveTo(p[0], p[1]);
 		
-		var i:Int = 0;
+		var i:Int = 2;
 		
 		while (i < p.length)
 		{
 			img_path.lineTo(p[i], p[++i]);
 			i++;
 		}
+	}
+	
+	var isFirst = true; // TEST
+	
+	public function getPath():Array<Float>
+	{
+		// https://stackoverflow.com/questions/7205832/as3-function-for-extrapolating-points-on-a-spline-curve-or-hermite-curve-similar
+		// https://stackoverflow.com/questions/10445650/coords-interpolation
+		// https://code.tutsplus.com/tutorials/gravity-in-action--active-8915
+		
+		var path:Array<Float> = [];
+		
+		var nbSegment:Int = 100;
+		var longSegment:Int = 3;
+		
+		var posX:Float = ent_hero.getWorldX();
+		var posY:Float = ent_hero.getWorldY();
+		var rotation:Float = ent_hero.getRotation();
+		
+		path[0] = posX;
+		path[1] = posY;
+		
+		for (i in 0...nbSegment)
+		{
+			// linear position
+			posX += longSegment * Math.sin(rotation);
+			posY += longSegment * Math.cos(rotation);
+			
+			// add gravity effect
+			for (ent in listEntities)
+			{
+				var gravity:Float = ent.gravity;
+				
+				if (gravity > 0.0)
+				{
+					var dist:Float = ent_hero.distanceFromWorld(ent);
+					var angle:Float = ent_hero.angleFromWorld(ent); // rad
+					var entX:Float = ent.getX();
+					var entY:Float = ent.getY();
+					
+					posX += gravity / dist * Math.sin(angle);
+					posY += gravity / dist * Math.cos(angle);
+					
+					if (isFirst)
+					{
+						trace(dist, angle, entX, entY);
+						trace(gravity / dist * Math.sin(angle));
+						isFirst = false;
+					}
+				}
+			}
+			
+			path.push(posX);
+			path.push(posY);
+		}
+		
+		/*img_path.clear();
+		img_path.lineStyle(5, 0xFF0000);
+		img_path.moveTo(ent_hero.getWorldX(), ent_hero.getWorldY());
+		img_path.lineTo(ent_planet.getX(), ent_planet.getY());*/
+		
+		return path;
+		
+		// TODO :
+		// • loop sur les entités
+		// • décaler le point suivant de la distance de base puis appliquer les effets des gravités des autres entités et déplacer ce point
+		// • selon la vitesse, changer ? la distance de base ? le nombre de point ?
 	}
 }
