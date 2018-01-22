@@ -1,6 +1,7 @@
 package com.grouuu.entities;
 
 import com.grouuu.Entity;
+import com.grouuu.Vector2D;
 import h2d.Layers;
 
 /**
@@ -67,8 +68,8 @@ class Hero extends Entity
 	
 	public function distanceFromWorld(other:Entity):Float
 	{
-		var dx = getWorldX() - other.getX();
-		var dy = getWorldY() - other.getY();
+		var dx:Float = getWorldX() - other.getX();
+		var dy:Float = getWorldY() - other.getY();
 		
 		return Math.sqrt(dx * dx + dy * dy);
 	}

@@ -3,6 +3,7 @@ package ;
 import com.grouuu.entities.Hero;
 import com.grouuu.entities.Planet;
 import com.grouuu.Entity;
+import com.grouuu.Vector2D;
 import h2d.Bitmap;
 import h2d.Graphics;
 import h2d.Layers;
@@ -168,6 +169,9 @@ class Main extends App
 			posX += longSegment * Math.sin(rotation);
 			posY += longSegment * Math.cos(rotation);
 			
+			var devX:Float = 0.0;
+			var devY:Float = 0.0;
+			
 			// add gravity effect
 			for (ent in listEntities)
 			{
@@ -175,26 +179,41 @@ class Main extends App
 				
 				if (gravity > 0.0)
 				{
-					var dist:Float = ent_hero.distanceFromWorld(ent);
-					var angle:Float = ent_hero.angleFromWorld(ent); // rad
 					var entX:Float = ent.getX();
 					var entY:Float = ent.getY();
 					
-					posX += gravity / dist * Math.sin(angle);
-					posY += gravity / dist * Math.cos(angle);
+					var dx:Float = posX - entX;
+					var dy:Float = posY - entY;
+					var dist:Float = Math.sqrt(dx * dx + dy * dy);
+					var angle:Float = Math.atan2(posY - entY, posX - entX);
+					var force:Float = 1 / dist * 100;
+					
+					var dirX:Int = posX < entX ? 1 : -1;
+					var dirY:Int = posY < entY ? 1 : -1;
+					
+					// TODO : le rapport de force doit être plus carré que ça (là ça arrive à "repousser" déjà...)
+					
+					devX += dirX * force * Math.sin(angle);
+					devY += dirY * force * Math.cos(angle);
+					//devX += force * Math.sin(angle);
+					//devY += force * Math.cos(angle);
 					
 					if (isFirst)
 					{
-						trace(dist, angle, entX, entY);
-						trace(gravity / dist * Math.sin(angle));
-						isFirst = false;
+						//trace(entX, entY, dist, angle, force, devX, devY);
+						trace(force, dist, devX, devY);
 					}
 				}
 			}
 			
+			posX += devX;
+			posY += devY;
+			
 			path.push(posX);
 			path.push(posY);
 		}
+		
+		isFirst = false;
 		
 		/*img_path.clear();
 		img_path.lineStyle(5, 0xFF0000);
