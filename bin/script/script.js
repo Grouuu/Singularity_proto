@@ -275,7 +275,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
 		this.layer_world = new h2d_Layers(this.s2d);
 		this.img_bg = new h2d_Bitmap(h2d_Tile.fromColor(0,this.s2d.width,this.s2d.height),this.layer_world);
-		this.ent_planet = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),500,420);
+		this.ent_planet = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),500,500);
 		this.ent_planet.crop(0,0);
 		this.ent_planet.resize(200,200);
 		this.ent_planet.center();
@@ -293,6 +293,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.ent_hero.layerWorld = this.layer_world;
 		this.ent_hero.center();
 		this.ent_hero.rotation(90);
+		this.ent_hero.vec_vel = new com_grouuu_Vector2D(0,0);
 		this.listEntities.push(this.ent_hero);
 		this.listEntities.push(this.ent_planet);
 		this.listEntities.push(ent_planet2);
@@ -348,6 +349,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 			var v1 = _g3.y - p[0].velocity.y;
 			_g3.posChanged = true;
 			_g3.y = v1;
+			this.ent_hero.vec_vel = p[0].velocity;
 		}
 	}
 	,getPath: function() {
@@ -355,7 +357,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 		var posX = this.ent_hero.getWorldX();
 		var posY = this.ent_hero.getWorldY();
 		var rotation = this.ent_hero.getRotation();
-		var vec_vel = new com_grouuu_Vector2D(0,0);
+		var vec_vel = this.ent_hero.vec_vel;
 		var crashed = false;
 		var _g1 = 0;
 		var _g = this.nbSegment;
@@ -377,6 +379,9 @@ Main.prototype = $extend(hxd_App.prototype,{
 					var vec_center = new com_grouuu_Vector2D(entX,entY);
 					vec_center.minus(vec_disp);
 					var magnitude = gravity / (vec_center.magnitude() * vec_center.magnitude());
+					if(magnitude > 2) {
+						magnitude = 2;
+					}
 					var direction = vec_center.angle();
 					var forceX = magnitude * Math.cos(direction);
 					var forceY = magnitude * Math.sin(direction);
@@ -400,7 +405,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 					var dy = posY - entY1;
 					var dist = Math.sqrt(dx * dx + dy * dy);
 					if(this.isFirst) {
-						haxe_Log.trace(dist,{ fileName : "Main.hx", lineNumber : 250, className : "Main", methodName : "getPath", customParams : [ent1.solidRadius]});
+						haxe_Log.trace(dist,{ fileName : "Main.hx", lineNumber : 261, className : "Main", methodName : "getPath", customParams : [ent1.solidRadius]});
 					}
 					if(dist < ent1.solidRadius) {
 						crashed = true;

@@ -61,7 +61,7 @@ class Main extends App
 		ent_planet = new Planet
 		(
 			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			500, 420
+			500, 500
 		);
 		
 		ent_planet.crop(0, 0);
@@ -95,6 +95,7 @@ class Main extends App
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
 		ent_hero.rotation(90);
+		ent_hero.vec_vel = new Vector2D(0, 0);
 		
 		// entities -----------------------------
 		
@@ -172,9 +173,13 @@ class Main extends App
 		{
 			layer_world.x -= p[0].velocity.x;
 			layer_world.y -= p[0].velocity.y;
+			
+			ent_hero.vec_vel = p[0].velocity;
 		}
 		
 		// TODO : le hero ne suit pas la ligne (soucis de vel, comme elle est reset à chaque frame ?)
+		// le déplacement du héros ne suit peut-être pas le step du path (là il va beaucoup trop vite)
+		// de plus la vitesse doit pouvoir être modifiée par le joueur
 		
 		//else
 			//trace("CRASH");
@@ -191,7 +196,8 @@ class Main extends App
 		var posY:Float = ent_hero.getWorldY();
 		var rotation:Float = ent_hero.getRotation();
 		
-		var vec_vel:Vector2D = new Vector2D(0, 0);
+		//var vec_vel:Vector2D = new Vector2D(0, 0);
+		var vec_vel:Vector2D = ent_hero.vec_vel;
 		
 		var crashed:Bool = false;
 		
@@ -221,6 +227,7 @@ class Main extends App
 					vec_center.minus(vec_disp);
 					
 					var magnitude:Float = gravity / (vec_center.magnitude() * vec_center.magnitude());
+					
 					var direction:Float = vec_center.angle();
 					var forceX:Float = magnitude * Math.cos(direction);
 					var forceY:Float = magnitude * Math.sin(direction);
