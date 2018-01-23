@@ -278,13 +278,25 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.ent_planet.resize(200,200);
 		this.ent_planet.center();
 		this.ent_planet.radiusMin = 200;
-		this.ent_planet.gravity = 500;
+		this.ent_planet.gravity = 2500;
+		var ent_planet2 = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),700,250);
+		ent_planet2.crop(0,0);
+		ent_planet2.resize(200,200);
+		ent_planet2.center();
+		ent_planet2.radiusMin = 200;
+		ent_planet2.gravity = 12500;
 		this.ent_hero = new com_grouuu_entities_Hero(new h2d_Bitmap(h2d_Tile.fromColor(16777215,32,32),this.s2d),this.s2d.width >> 1,this.s2d.height >> 1);
 		this.ent_hero.layerWorld = this.layer_world;
 		this.ent_hero.center();
 		this.ent_hero.rotation(90);
+		var tmp = this.ent_hero.getWorldX();
+		var tmp1 = this.ent_hero.getWorldY();
+		this.ent_hero.vec_disp = new com_grouuu_Vector2D(tmp,tmp1);
+		this.ent_hero.vec_vel = new com_grouuu_Vector2D(0,0);
+		this.ent_hero.vec_acc = new com_grouuu_Vector2D(0,0);
 		this.listEntities.push(this.ent_hero);
 		this.listEntities.push(this.ent_planet);
+		this.listEntities.push(ent_planet2);
 		this.img_path = new h2d_Graphics(this.s2d);
 		this.img_path.lineStyle(5,16711680);
 		this.layer_world.addChildAt(this.img_path,0);
@@ -338,14 +350,15 @@ Main.prototype = $extend(hxd_App.prototype,{
 		var rotation = this.ent_hero.getRotation();
 		path[0] = posX;
 		path[1] = posY;
+		var vec_vel = this.ent_hero.vec_vel.clone();
+		var vec_acc = this.ent_hero.vec_acc.clone();
 		var _g1 = 0;
 		var _g = nbSegment;
 		while(_g1 < _g) {
 			var i = _g1++;
 			posX += longSegment * Math.sin(rotation);
 			posY += longSegment * Math.cos(rotation);
-			var devX = 0.0;
-			var devY = 0.0;
+			var dev = new com_grouuu_Vector2D(0,0);
 			var _g2 = 0;
 			var _g3 = this.listEntities;
 			while(_g2 < _g3.length) {
@@ -355,22 +368,24 @@ Main.prototype = $extend(hxd_App.prototype,{
 				if(gravity > 0.0) {
 					var entX = ent.getX();
 					var entY = ent.getY();
-					var dx = posX - entX;
-					var dy = posY - entY;
-					var dist = Math.sqrt(dx * dx + dy * dy);
-					var angle = Math.atan2(posY - entY,posX - entX);
-					var force = 1 / dist * 100;
-					var dirX = posX < entX ? 1 : -1;
-					var dirY = posY < entY ? 1 : -1;
-					devX += dirX * force * Math.sin(angle);
-					devY += dirY * force * Math.cos(angle);
+					var vec_disp = new com_grouuu_Vector2D(posX,posY);
+					var vec_center = new com_grouuu_Vector2D(entX,entY);
+					vec_center.minus(vec_disp);
+					var magnitude = gravity / (vec_center.magnitude() * vec_center.magnitude());
+					var direction = vec_center.angle();
+					var forceX = magnitude * Math.cos(direction);
+					var forceY = magnitude * Math.sin(direction);
+					vec_acc = new com_grouuu_Vector2D(forceX,forceY);
+					vec_acc.multiply(1 / this.ent_hero.mass);
+					vec_vel.add(vec_acc);
+					dev.add(vec_vel);
 					if(this.isFirst) {
-						haxe_Log.trace(force,{ fileName : "Main.hx", lineNumber : 204, className : "Main", methodName : "getPath", customParams : [dist,devX,devY]});
+						haxe_Log.trace(vec_acc,{ fileName : "Main.hx", lineNumber : 220, className : "Main", methodName : "getPath"});
 					}
 				}
 			}
-			posX += devX;
-			posY += devY;
+			posX += dev.x;
+			posY += dev.y;
 			path.push(posX);
 			path.push(posY);
 		}
@@ -644,7 +659,40 @@ com_grouuu_Sphere.__super__ = com_grouuu_Entity;
 com_grouuu_Sphere.prototype = $extend(com_grouuu_Entity.prototype,{
 	__class__: com_grouuu_Sphere
 });
+var com_grouuu_Vector2D = function(x,y) {
+	this.y = 0.0;
+	this.x = 0.0;
+	this.x = x;
+	this.y = y;
+};
+$hxClasses["com.grouuu.Vector2D"] = com_grouuu_Vector2D;
+com_grouuu_Vector2D.__name__ = ["com","grouuu","Vector2D"];
+com_grouuu_Vector2D.prototype = {
+	magnitude: function() {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	}
+	,angle: function() {
+		return Math.atan2(this.y,this.x);
+	}
+	,minus: function(vector) {
+		this.x -= vector.x;
+		this.y -= vector.y;
+	}
+	,add: function(vector) {
+		this.x += vector.x;
+		this.y += vector.y;
+	}
+	,multiply: function(scalar) {
+		this.x *= scalar;
+		this.y *= scalar;
+	}
+	,clone: function() {
+		return new com_grouuu_Vector2D(this.x,this.y);
+	}
+	,__class__: com_grouuu_Vector2D
+};
 var com_grouuu_entities_Hero = function(bmp,x,y) {
+	this.mass = 10.0;
 	this.incRotation = 2.0;
 	com_grouuu_Entity.call(this,bmp,x,y);
 };

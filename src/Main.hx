@@ -61,7 +61,19 @@ class Main extends App
 		ent_planet.resize(200, 200);
 		ent_planet.center();
 		ent_planet.radiusMin = 200;
-		ent_planet.gravity = 500;
+		ent_planet.gravity = 2500;
+		
+		var ent_planet2 = new Planet
+		(
+			new Bitmap(Res.spritesheet.toTile(), layer_world),
+			700, 250
+		);
+		
+		ent_planet2.crop(0, 0);
+		ent_planet2.resize(200, 200);
+		ent_planet2.center();
+		ent_planet2.radiusMin = 200;
+		ent_planet2.gravity = 12500;
 		
 		// hero ---------------------------------
 		
@@ -74,11 +86,15 @@ class Main extends App
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
 		ent_hero.rotation(90);
+		ent_hero.vec_disp = new Vector2D(ent_hero.getWorldX(), ent_hero.getWorldY());
+		ent_hero.vec_vel = new Vector2D(0, 0);
+		ent_hero.vec_acc = new Vector2D(0, 0);
 		
 		// entities -----------------------------
 		
 		listEntities.push(ent_hero);
 		listEntities.push(ent_planet);
+		listEntities.push(ent_planet2);
 		
 		// path ---------------------------------
 		
@@ -163,14 +179,16 @@ class Main extends App
 		path[0] = posX;
 		path[1] = posY;
 		
+		var vec_vel:Vector2D = ent_hero.vec_vel.clone();
+		var vec_acc:Vector2D = ent_hero.vec_acc.clone();
+		
 		for (i in 0...nbSegment)
 		{
 			// linear position
 			posX += longSegment * Math.sin(rotation);
 			posY += longSegment * Math.cos(rotation);
 			
-			var devX:Float = 0.0;
-			var devY:Float = 0.0;
+			var dev:Vector2D = new Vector2D(0, 0); // total deviation
 			
 			// add gravity effect
 			for (ent in listEntities)
@@ -182,32 +200,29 @@ class Main extends App
 					var entX:Float = ent.getX();
 					var entY:Float = ent.getY();
 					
-					var dx:Float = posX - entX;
-					var dy:Float = posY - entY;
-					var dist:Float = Math.sqrt(dx * dx + dy * dy);
-					var angle:Float = Math.atan2(posY - entY, posX - entX);
-					var force:Float = 1 / dist * 100;
+					var vec_disp:Vector2D = new Vector2D(posX, posY);
 					
-					var dirX:Int = posX < entX ? 1 : -1;
-					var dirY:Int = posY < entY ? 1 : -1;
+					var vec_center:Vector2D = new Vector2D(entX, entY);
+					vec_center.minus(vec_disp);
 					
-					// TODO : le rapport de force doit être plus carré que ça (là ça arrive à "repousser" déjà...)
+					var magnitude:Float = gravity / (vec_center.magnitude() * vec_center.magnitude());
+					var direction:Float = vec_center.angle();
+					var forceX:Float = magnitude * Math.cos(direction);
+					var forceY:Float = magnitude * Math.sin(direction);
 					
-					devX += dirX * force * Math.sin(angle);
-					devY += dirY * force * Math.cos(angle);
-					//devX += force * Math.sin(angle);
-					//devY += force * Math.cos(angle);
+					vec_acc = new Vector2D(forceX, forceY);
+					vec_acc.multiply(1 / ent_hero.mass);
+					vec_vel.add(vec_acc);
+					
+					dev.add(vec_vel);
 					
 					if (isFirst)
-					{
-						//trace(entX, entY, dist, angle, force, devX, devY);
-						trace(force, dist, devX, devY);
-					}
+						trace(vec_acc);
 				}
 			}
 			
-			posX += devX;
-			posY += devY;
+			posX += dev.x;
+			posY += dev.y;
 			
 			path.push(posX);
 			path.push(posY);
@@ -215,16 +230,6 @@ class Main extends App
 		
 		isFirst = false;
 		
-		/*img_path.clear();
-		img_path.lineStyle(5, 0xFF0000);
-		img_path.moveTo(ent_hero.getWorldX(), ent_hero.getWorldY());
-		img_path.lineTo(ent_planet.getX(), ent_planet.getY());*/
-		
 		return path;
-		
-		// TODO :
-		// • loop sur les entités
-		// • décaler le point suivant de la distance de base puis appliquer les effets des gravités des autres entités et déplacer ce point
-		// • selon la vitesse, changer ? la distance de base ? le nombre de point ?
 	}
 }
