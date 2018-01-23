@@ -22,9 +22,6 @@ class Hero extends Entity
 	
 	public var incRotation(default, null):Float = 2.0;
 	
-	public var vec_disp:Vector2D;
-	public var vec_vel:Vector2D;
-	public var vec_acc:Vector2D;
 	public var mass:Float = 10.0;
 	
 	override public function update(dt:Float):Void 

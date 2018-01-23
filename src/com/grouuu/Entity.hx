@@ -15,6 +15,7 @@ class Entity
 	public var isMovable:Bool = false;
 	
 	public var gravity:Float = 0.0;
+	public var solidRadius:Float = 0.0;
 	
 	public function new(bmp:Bitmap, ?x:Float = 0.0, ?y:Float = 0.0)
 	{

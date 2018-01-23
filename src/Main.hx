@@ -17,6 +17,13 @@ import hxd.Res;
  * @author Grouuu
  */
 
+typedef PathSegment =
+{
+	var x:Float;
+	var y:Float;
+	var velocity:Vector2D;
+}
+
 class Main extends App
 {
 	static public var instance:Main;
@@ -54,7 +61,7 @@ class Main extends App
 		ent_planet = new Planet
 		(
 			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			500, 400
+			500, 420
 		);
 		
 		ent_planet.crop(0, 0);
@@ -62,11 +69,12 @@ class Main extends App
 		ent_planet.center();
 		ent_planet.radiusMin = 200;
 		ent_planet.gravity = 2500;
+		ent_planet.solidRadius = 100;
 		
 		var ent_planet2 = new Planet
 		(
 			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			700, 250
+			700, 150
 		);
 		
 		ent_planet2.crop(0, 0);
@@ -74,6 +82,7 @@ class Main extends App
 		ent_planet2.center();
 		ent_planet2.radiusMin = 200;
 		ent_planet2.gravity = 12500;
+		ent_planet2.solidRadius = 100;
 		
 		// hero ---------------------------------
 		
@@ -86,9 +95,6 @@ class Main extends App
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
 		ent_hero.rotation(90);
-		ent_hero.vec_disp = new Vector2D(ent_hero.getWorldX(), ent_hero.getWorldY());
-		ent_hero.vec_vel = new Vector2D(0, 0);
-		ent_hero.vec_acc = new Vector2D(0, 0);
 		
 		// entities -----------------------------
 		
@@ -108,6 +114,9 @@ class Main extends App
 	
 	var rotKeyDown:Int = 0;
 	var movKeyDown:Int = 0;
+	
+	var nbSegment:Int = 500;
+	var longSegment:Int = 3;
 	
 	override function update(dt:Float):Void
 	{
@@ -143,47 +152,53 @@ class Main extends App
 		
 		// path ---------------------------------
 		
-		var p:Array<Float> = getPath();
+		var p:Array<PathSegment> = getPath();
 		
 		img_path.clear();
-		img_path.lineStyle(5, 0xFF0000);
 		
-		img_path.moveTo(p[0], p[1]);
-		
-		var i:Int = 2;
+		var i:Int = 1;
 		
 		while (i < p.length)
 		{
-			img_path.lineTo(p[i], p[++i]);
+			img_path.lineStyle(5, 0xFF0000, 1 - (1 / nbSegment) * i);
+			img_path.moveTo(p[i - 1].x, p[i - 1].y);
+			img_path.lineTo(p[i].x, p[i].y);
 			i++;
 		}
+		
+		// move ---------------------------------
+		
+		if (p[0] != null)
+		{
+			layer_world.x -= p[0].velocity.x;
+			layer_world.y -= p[0].velocity.y;
+		}
+		
+		// TODO : le hero ne suit pas la ligne (soucis de vel, comme elle est reset à chaque frame ?)
+		
+		//else
+			//trace("CRASH");
 	}
 	
+	var firstInc:Int = 0; // TEST
 	var isFirst = true; // TEST
 	
-	public function getPath():Array<Float>
+	public function getPath():Array<PathSegment>
 	{
-		// https://stackoverflow.com/questions/7205832/as3-function-for-extrapolating-points-on-a-spline-curve-or-hermite-curve-similar
-		// https://stackoverflow.com/questions/10445650/coords-interpolation
-		// https://code.tutsplus.com/tutorials/gravity-in-action--active-8915
-		
-		var path:Array<Float> = [];
-		
-		var nbSegment:Int = 100;
-		var longSegment:Int = 3;
+		var path:Array<PathSegment> = [];
 		
 		var posX:Float = ent_hero.getWorldX();
 		var posY:Float = ent_hero.getWorldY();
 		var rotation:Float = ent_hero.getRotation();
 		
-		path[0] = posX;
-		path[1] = posY;
+		var vec_vel:Vector2D = new Vector2D(0, 0);
 		
-		var vec_vel:Vector2D = ent_hero.vec_vel.clone();
-		var vec_acc:Vector2D = ent_hero.vec_acc.clone();
+		var crashed:Bool = false;
 		
 		for (i in 0...nbSegment)
 		{
+			// https://code.tutsplus.com/tutorials/gravity-in-action--active-8915
+			
 			// linear position
 			posX += longSegment * Math.sin(rotation);
 			posY += longSegment * Math.cos(rotation);
@@ -210,25 +225,46 @@ class Main extends App
 					var forceX:Float = magnitude * Math.cos(direction);
 					var forceY:Float = magnitude * Math.sin(direction);
 					
-					vec_acc = new Vector2D(forceX, forceY);
+					var vec_acc:Vector2D = new Vector2D(forceX, forceY);
 					vec_acc.multiply(1 / ent_hero.mass);
+					
 					vec_vel.add(vec_acc);
 					
 					dev.add(vec_vel);
-					
-					if (isFirst)
-						trace(vec_acc);
 				}
 			}
 			
 			posX += dev.x;
 			posY += dev.y;
 			
-			path.push(posX);
-			path.push(posY);
+			for (ent in listEntities)
+			{
+				if (ent.solidRadius > 0.0)
+				{
+					var entX:Float = ent.getX();
+					var entY:Float = ent.getY();
+					
+					var dx:Float = posX - entX;
+					var dy:Float = posY - entY;
+					
+					var dist:Float = Math.sqrt(dx * dx + dy * dy);
+					
+					if (isFirst)
+						trace(dist, ent.solidRadius);
+					
+					if (dist < ent.solidRadius)
+						crashed = true;
+				}
+			}
+			// TODO : tester si collision avec un corps dur, si oui couper la liste ici
+			
+			if (!crashed)
+				path.push( { x: posX, y: posY, velocity: dev.clone() } );
+			else
+				break;
 		}
 		
-		isFirst = false;
+		isFirst = false; // TEST
 		
 		return path;
 	}

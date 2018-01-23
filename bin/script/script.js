@@ -257,6 +257,8 @@ hxd_App.prototype = {
 };
 var Main = function() {
 	this.isFirst = true;
+	this.longSegment = 3;
+	this.nbSegment = 500;
 	this.movKeyDown = 0;
 	this.rotKeyDown = 0;
 	this.listEntities = [];
@@ -273,27 +275,24 @@ Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
 		this.layer_world = new h2d_Layers(this.s2d);
 		this.img_bg = new h2d_Bitmap(h2d_Tile.fromColor(0,this.s2d.width,this.s2d.height),this.layer_world);
-		this.ent_planet = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),500,400);
+		this.ent_planet = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),500,420);
 		this.ent_planet.crop(0,0);
 		this.ent_planet.resize(200,200);
 		this.ent_planet.center();
 		this.ent_planet.radiusMin = 200;
 		this.ent_planet.gravity = 2500;
-		var ent_planet2 = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),700,250);
+		this.ent_planet.solidRadius = 100;
+		var ent_planet2 = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),700,150);
 		ent_planet2.crop(0,0);
 		ent_planet2.resize(200,200);
 		ent_planet2.center();
 		ent_planet2.radiusMin = 200;
 		ent_planet2.gravity = 12500;
+		ent_planet2.solidRadius = 100;
 		this.ent_hero = new com_grouuu_entities_Hero(new h2d_Bitmap(h2d_Tile.fromColor(16777215,32,32),this.s2d),this.s2d.width >> 1,this.s2d.height >> 1);
 		this.ent_hero.layerWorld = this.layer_world;
 		this.ent_hero.center();
 		this.ent_hero.rotation(90);
-		var tmp = this.ent_hero.getWorldX();
-		var tmp1 = this.ent_hero.getWorldY();
-		this.ent_hero.vec_disp = new com_grouuu_Vector2D(tmp,tmp1);
-		this.ent_hero.vec_vel = new com_grouuu_Vector2D(0,0);
-		this.ent_hero.vec_acc = new com_grouuu_Vector2D(0,0);
 		this.listEntities.push(this.ent_hero);
 		this.listEntities.push(this.ent_planet);
 		this.listEntities.push(ent_planet2);
@@ -326,38 +325,44 @@ Main.prototype = $extend(hxd_App.prototype,{
 		}
 		var p = this.getPath();
 		this.img_path.clear();
-		this.img_path.lineStyle(5,16711680);
-		var _this = this.img_path;
-		var x = p[0];
-		var y = p[1];
-		_this.flush();
-		_this.addVertex(x,y,_this.curR,_this.curG,_this.curB,_this.curA,x * _this.ma + y * _this.mc + _this.mx,x * _this.mb + y * _this.md + _this.my);
-		var i = 2;
+		var i = 1;
 		while(i < p.length) {
+			this.img_path.lineStyle(5,16711680,1 - 1 / this.nbSegment * i);
+			var _this = this.img_path;
+			var x = p[i - 1].x;
+			var y = p[i - 1].y;
+			_this.flush();
+			_this.addVertex(x,y,_this.curR,_this.curG,_this.curB,_this.curA,x * _this.ma + y * _this.mc + _this.mx,x * _this.mb + y * _this.md + _this.my);
 			var _this1 = this.img_path;
-			var x1 = p[i];
-			var y1 = p[++i];
+			var x1 = p[i].x;
+			var y1 = p[i].y;
 			_this1.addVertex(x1,y1,_this1.curR,_this1.curG,_this1.curB,_this1.curA,x1 * _this1.ma + y1 * _this1.mc + _this1.mx,x1 * _this1.mb + y1 * _this1.md + _this1.my);
 			++i;
+		}
+		if(p[0] != null) {
+			var _g2 = this.layer_world;
+			var v = _g2.x - p[0].velocity.x;
+			_g2.posChanged = true;
+			_g2.x = v;
+			var _g3 = this.layer_world;
+			var v1 = _g3.y - p[0].velocity.y;
+			_g3.posChanged = true;
+			_g3.y = v1;
 		}
 	}
 	,getPath: function() {
 		var path = [];
-		var nbSegment = 100;
-		var longSegment = 3;
 		var posX = this.ent_hero.getWorldX();
 		var posY = this.ent_hero.getWorldY();
 		var rotation = this.ent_hero.getRotation();
-		path[0] = posX;
-		path[1] = posY;
-		var vec_vel = this.ent_hero.vec_vel.clone();
-		var vec_acc = this.ent_hero.vec_acc.clone();
+		var vec_vel = new com_grouuu_Vector2D(0,0);
+		var crashed = false;
 		var _g1 = 0;
-		var _g = nbSegment;
+		var _g = this.nbSegment;
 		while(_g1 < _g) {
 			var i = _g1++;
-			posX += longSegment * Math.sin(rotation);
-			posY += longSegment * Math.cos(rotation);
+			posX += this.longSegment * Math.sin(rotation);
+			posY += this.longSegment * Math.cos(rotation);
 			var dev = new com_grouuu_Vector2D(0,0);
 			var _g2 = 0;
 			var _g3 = this.listEntities;
@@ -375,19 +380,38 @@ Main.prototype = $extend(hxd_App.prototype,{
 					var direction = vec_center.angle();
 					var forceX = magnitude * Math.cos(direction);
 					var forceY = magnitude * Math.sin(direction);
-					vec_acc = new com_grouuu_Vector2D(forceX,forceY);
+					var vec_acc = new com_grouuu_Vector2D(forceX,forceY);
 					vec_acc.multiply(1 / this.ent_hero.mass);
 					vec_vel.add(vec_acc);
 					dev.add(vec_vel);
-					if(this.isFirst) {
-						haxe_Log.trace(vec_acc,{ fileName : "Main.hx", lineNumber : 220, className : "Main", methodName : "getPath"});
-					}
 				}
 			}
 			posX += dev.x;
 			posY += dev.y;
-			path.push(posX);
-			path.push(posY);
+			var _g21 = 0;
+			var _g31 = this.listEntities;
+			while(_g21 < _g31.length) {
+				var ent1 = _g31[_g21];
+				++_g21;
+				if(ent1.solidRadius > 0.0) {
+					var entX1 = ent1.getX();
+					var entY1 = ent1.getY();
+					var dx = posX - entX1;
+					var dy = posY - entY1;
+					var dist = Math.sqrt(dx * dx + dy * dy);
+					if(this.isFirst) {
+						haxe_Log.trace(dist,{ fileName : "Main.hx", lineNumber : 250, className : "Main", methodName : "getPath", customParams : [ent1.solidRadius]});
+					}
+					if(dist < ent1.solidRadius) {
+						crashed = true;
+					}
+				}
+			}
+			if(!crashed) {
+				path.push({ x : posX, y : posY, velocity : dev.clone()});
+			} else {
+				break;
+			}
 		}
 		this.isFirst = false;
 		return path;
@@ -607,6 +631,7 @@ var com_grouuu_Entity = function(bmp,x,y) {
 	if(x == null) {
 		x = 0.0;
 	}
+	this.solidRadius = 0.0;
 	this.gravity = 0.0;
 	bmp.posChanged = true;
 	bmp.x = x;
