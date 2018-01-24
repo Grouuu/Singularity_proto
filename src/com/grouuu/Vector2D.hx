@@ -5,7 +5,9 @@ package com.grouuu;
  * @author Grouuu
  */
 
-//https://code.tutsplus.com/tutorials/gravity-in-action--active-8915
+// https://code.tutsplus.com/tutorials/gravity-in-action--active-8915
+// https://code.tutsplus.com/tutorials/euclidean-vectors-in-flash--active-8192
+// http://www.al.lu/physics/premiere/robinet/cinematique.pdf
 class Vector2D
 {
 	public var x:Float = 0.0;
@@ -24,6 +26,8 @@ class Vector2D
 	
 	public function angle():Float
 	{
+		/*if (angle < 0)
+			angle += Math.PI * 2;*/
 		return Math.atan2(y, x);
 	}
 	
