@@ -258,8 +258,7 @@ hxd_App.prototype = {
 var Main = function() {
 	this.isFirst = true;
 	this.firstInc = 0;
-	this.nbSegment = 500;
-	this.movKeyDown = 0;
+	this.crashed = false;
 	this.rotKeyDown = 0;
 	this.listEntities = [];
 	hxd_App.call(this);
@@ -274,24 +273,32 @@ Main.__super__ = hxd_App;
 Main.prototype = $extend(hxd_App.prototype,{
 	init: function() {
 		this.layer_world = new h2d_Layers(this.s2d);
+		var _this = this.layer_world;
+		_this.posChanged = true;
+		_this.x = this.s2d.width >> 1;
+		var _this1 = this.layer_world;
+		_this1.posChanged = true;
+		_this1.y = this.s2d.height >> 1;
 		this.img_bg = new h2d_Bitmap(h2d_Tile.fromColor(0,this.s2d.width,this.s2d.height),this.layer_world);
-		this.ent_planet = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),500,500);
+		this.ent_planet = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),100,200);
 		this.ent_planet.crop(0,0);
 		this.ent_planet.resize(200,200);
 		this.ent_planet.center();
-		this.ent_planet.mass = 200;
-		this.ent_planet2 = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),700,150);
+		this.ent_planet.mass = 20;
+		this.ent_planet.solidRadius = 100;
+		this.ent_planet2 = new com_grouuu_entities_Planet(new h2d_Bitmap(hxd_Res.get_loader().loadImage("spritesheet.png").toTile(),this.layer_world),300,-150);
 		this.ent_planet2.crop(0,0);
 		this.ent_planet2.resize(200,200);
 		this.ent_planet2.center();
-		this.ent_planet2.mass = 200;
-		this.ent_hero = new com_grouuu_entities_Hero(new h2d_Bitmap(h2d_Tile.fromColor(16777215,32,32),this.s2d),this.s2d.width >> 1,this.s2d.height >> 1);
+		this.ent_planet2.mass = 20;
+		this.ent_planet2.solidRadius = 100;
+		this.ent_hero = new com_grouuu_entities_Hero(new h2d_Bitmap(h2d_Tile.fromColor(16777215,32,32),this.s2d),this.layer_world.x,this.layer_world.y);
+		this.ent_hero.decalX = this.layer_world.x;
+		this.ent_hero.decalY = this.layer_world.y;
 		this.ent_hero.layerWorld = this.layer_world;
 		this.ent_hero.center();
-		this.ent_hero.rotation(90);
 		this.ent_hero.mass = 10;
 		this.ent_hero.vec_vel = new com_grouuu_Vector2D(0,0);
-		this.listEntities.push(this.ent_hero);
 		this.listEntities.push(this.ent_planet);
 		this.listEntities.push(this.ent_planet2);
 		this.img_path = new h2d_Graphics(this.s2d);
@@ -299,19 +306,6 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.layer_world.addChildAt(this.img_path,0);
 	}
 	,update: function(dt) {
-		if(hxd_Key.isDown(38) && this.movKeyDown != 40) {
-			this.movKeyDown = 38;
-			var _g = this.layer_world;
-			_g.posChanged = true;
-			_g.y += 5;
-		} else if(hxd_Key.isDown(40) && this.movKeyDown != 38) {
-			this.movKeyDown = 40;
-			var _g1 = this.layer_world;
-			_g1.posChanged = true;
-			_g1.y -= 5;
-		} else {
-			this.movKeyDown = 0;
-		}
 		if(hxd_Key.isDown(39) && this.rotKeyDown != 37) {
 			this.rotKeyDown = 39;
 			this.ent_hero.rotation(this.ent_hero.incRotation * dt);
@@ -321,12 +315,49 @@ Main.prototype = $extend(hxd_App.prototype,{
 		} else {
 			this.rotKeyDown = 0;
 		}
+		if(!this.crashed) {
+			var hero_v = this.ent_hero.vec_vel;
+			var hero_px = this.ent_hero.getWorldX();
+			var hero_py = this.ent_hero.getWorldY();
+			var hero_phm = this.ent_hero.mass;
+			var pos = new com_grouuu_Vector2D(hero_px,hero_py);
+			var _g = 0;
+			var _g1 = this.listEntities;
+			while(_g < _g1.length) {
+				var ent = _g1[_g];
+				++_g;
+				if(ent != this.ent_hero) {
+					this.addGravity(pos,hero_v,ent.getX(),ent.getY(),hero_phm,ent.mass);
+				}
+			}
+			var _g2 = this.layer_world;
+			_g2.posChanged = true;
+			_g2.x -= hero_v.x * dt;
+			var _g3 = this.layer_world;
+			_g3.posChanged = true;
+			_g3.y -= hero_v.y * dt;
+			this.ent_hero.vec_vel = hero_v;
+			var _g4 = 0;
+			var _g11 = this.listEntities;
+			while(_g4 < _g11.length) {
+				var ent1 = _g11[_g4];
+				++_g4;
+				if(ent1 != this.ent_hero) {
+					var dx = this.ent_hero.getWorldX() - ent1.getX();
+					var dy = this.ent_hero.getWorldY() - ent1.getY();
+					var dist = Math.sqrt(dx * dx + dy * dy);
+					if(dist <= ent1.solidRadius) {
+						this.crashed = true;
+						break;
+					}
+				}
+			}
+		}
+		this.ent_hero.vec_vel = new com_grouuu_Vector2D(0.5,0);
 		this.img_path.clear();
+		var nbSegment = 500;
 		var i = 1;
-		var a = 0;
-		var acc;
-		var v = new com_grouuu_Vector2D(10,0);
-		var p;
+		var v = this.ent_hero.vec_vel;
 		var px = this.ent_hero.getWorldX();
 		var py = this.ent_hero.getWorldY();
 		var phm = this.ent_hero.mass;
@@ -336,44 +367,54 @@ Main.prototype = $extend(hxd_App.prototype,{
 		var pl2x = this.ent_planet2.getX();
 		var pl2y = this.ent_planet2.getY();
 		var pl2m = this.ent_planet2.mass;
+		var p;
+		var dev;
+		var newVel = v.clone();
 		var oldX = px;
 		var oldY = py;
-		while(i < 20) {
-			p = this.getSimplePosition(px,py,a,v,1);
-			v.reset();
-			acc = new com_grouuu_Vector2D(0,0);
-			this.addGravity(p,acc,v,pl1x,pl1y,phm,pl1m);
-			this.addGravity(p,acc,v,pl2x,pl2y,phm,pl2m);
-			a = v.angle();
+		var isCrashed = false;
+		while(i <= nbSegment) {
+			p = new com_grouuu_Vector2D(px,py);
+			this.addGravity(p,newVel,pl1x,pl1y,phm,pl1m);
+			this.addGravity(p,newVel,pl2x,pl2y,phm,pl2m);
+			p.add(newVel);
 			px = p.x;
 			py = p.y;
-			if(this.isFirst) {
-				haxe_Log.trace(p,{ fileName : "Main.hx", lineNumber : 263, className : "Main", methodName : "update"});
-			}
-			this.img_path.lineStyle(5,16711680,1 - 1 / this.nbSegment * i);
+			this.img_path.lineStyle(5,16711680,1 - 1 / nbSegment * i);
 			var _this = this.img_path;
 			_this.flush();
 			_this.addVertex(oldX,oldY,_this.curR,_this.curG,_this.curB,_this.curA,oldX * _this.ma + oldY * _this.mc + _this.mx,oldX * _this.mb + oldY * _this.md + _this.my);
 			var _this1 = this.img_path;
 			_this1.addVertex(px,py,_this1.curR,_this1.curG,_this1.curB,_this1.curA,px * _this1.ma + py * _this1.mc + _this1.mx,px * _this1.mb + py * _this1.md + _this1.my);
+			var j = 0;
+			var _g5 = 0;
+			var _g12 = this.listEntities;
+			while(_g5 < _g12.length) {
+				var ent2 = _g12[_g5];
+				++_g5;
+				if(ent2 != this.ent_hero) {
+					var dx1 = px - ent2.getX();
+					var dy1 = py - ent2.getY();
+					var dist1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+					if(dist1 <= ent2.solidRadius) {
+						isCrashed = true;
+						break;
+					}
+				}
+			}
 			oldX = px;
 			oldY = py;
+			if(isCrashed) {
+				break;
+			}
 			++i;
 		}
 		this.firstInc++;
-		if(this.firstInc > 1) {
+		if(this.firstInc > 20) {
 			this.isFirst = false;
 		}
 	}
-	,getSimplePosition: function(x,y,angle,vel,dt) {
-		var pos = new com_grouuu_Vector2D(x,y);
-		var projX = vel.x * Math.cos(angle);
-		var projY = vel.y * Math.sin(angle);
-		pos.x += projX * dt;
-		pos.y += projY * dt;
-		return pos;
-	}
-	,addGravity: function(pos,acc,vel,entX,entY,m,M) {
+	,addGravity: function(pos,vel,entX,entY,m,M) {
 		var K = 500;
 		var toCenter = new com_grouuu_Vector2D(entX,entY);
 		toCenter.minus(pos);
@@ -382,7 +423,7 @@ Main.prototype = $extend(hxd_App.prototype,{
 		var magnitude = K * m * M / (centerMagnitude * centerMagnitude);
 		var forceX = magnitude * Math.cos(centerDirection);
 		var forceY = magnitude * Math.sin(centerDirection);
-		acc = new com_grouuu_Vector2D(forceX,forceY);
+		var acc = new com_grouuu_Vector2D(forceX,forceY);
 		acc.multiply(1 / m);
 		vel.add(acc);
 		pos.add(vel);
@@ -602,6 +643,7 @@ var com_grouuu_Entity = function(bmp,x,y) {
 	if(x == null) {
 		x = 0.0;
 	}
+	this.solidRadius = 0.0;
 	this.mass = 0.0;
 	bmp.posChanged = true;
 	bmp.x = x;
@@ -654,6 +696,12 @@ com_grouuu_Sphere.prototype = $extend(com_grouuu_Entity.prototype,{
 	__class__: com_grouuu_Sphere
 });
 var com_grouuu_Vector2D = function(x,y) {
+	if(y == null) {
+		y = 0;
+	}
+	if(x == null) {
+		x = 0;
+	}
 	this.y = 0.0;
 	this.x = 0.0;
 	this.x = x;
@@ -680,9 +728,8 @@ com_grouuu_Vector2D.prototype = {
 		this.x *= scalar;
 		this.y *= scalar;
 	}
-	,reset: function() {
-		this.x = 0.0;
-		this.y = 0.0;
+	,clone: function() {
+		return new com_grouuu_Vector2D(this.x,this.y);
 	}
 	,__class__: com_grouuu_Vector2D
 };
@@ -695,10 +742,16 @@ com_grouuu_entities_Hero.__name__ = ["com","grouuu","entities","Hero"];
 com_grouuu_entities_Hero.__super__ = com_grouuu_Entity;
 com_grouuu_entities_Hero.prototype = $extend(com_grouuu_Entity.prototype,{
 	getWorldX: function() {
-		return this.getX() - this.layerWorld.x;
+		return -this.layerWorld.x + this.decalX;
 	}
 	,getWorldY: function() {
-		return this.getY() - this.layerWorld.y;
+		return -this.layerWorld.y + this.decalY;
+	}
+	,getX: function() {
+		return com_grouuu_Entity.prototype.getX.call(this);
+	}
+	,getY: function() {
+		return com_grouuu_Entity.prototype.getY.call(this);
 	}
 	,__class__: com_grouuu_entities_Hero
 });

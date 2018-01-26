@@ -52,6 +52,8 @@ class Main extends App
 	override function init():Void
 	{
 		layer_world = new Layers(s2d);
+		layer_world.x = s2d.width >> 1;
+		layer_world.y = s2d.height >> 1;
 		
 		// background ---------------------------
 		
@@ -62,46 +64,46 @@ class Main extends App
 		ent_planet = new Planet
 		(
 			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			500, 500
+			100, 200
 		);
 		
 		ent_planet.crop(0, 0);
 		ent_planet.resize(200, 200);
 		ent_planet.center();
-		ent_planet.mass = 200;
-		//ent_planet.radiusMin = 200;
-		//ent_planet.solidRadius = 100;
+		ent_planet.mass = 20;
+		ent_planet.solidRadius = 100;
 		
 		ent_planet2 = new Planet
 		(
 			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			700, 150
+			300, -150
 		);
 		
 		ent_planet2.crop(0, 0);
 		ent_planet2.resize(200, 200);
 		ent_planet2.center();
-		ent_planet2.mass = 200;
-		//ent_planet2.radiusMin = 200;
-		//ent_planet2.solidRadius = 100;
+		ent_planet2.mass = 20;
+		ent_planet2.solidRadius = 100;
 		
 		// hero ---------------------------------
 		
 		ent_hero = new Hero
 		(
 			new Bitmap(Tile.fromColor(0xFFFFFF, 32, 32), s2d),
-			s2d.width >> 1, s2d.height >> 1
+			layer_world.x, layer_world.y
 		);
 		
+		ent_hero.decalX = layer_world.x;
+		ent_hero.decalY = layer_world.y;
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
-		ent_hero.rotation(90);
+		//ent_hero.rotation(90);
 		ent_hero.mass = 10;
 		ent_hero.vec_vel = new Vector2D(0, 0);
 		
 		// entities -----------------------------
 		
-		listEntities.push(ent_hero);
+		//listEntities.push(ent_hero);
 		listEntities.push(ent_planet);
 		listEntities.push(ent_planet2);
 		
@@ -117,31 +119,13 @@ class Main extends App
 	
 	var rotKeyDown:Int = 0;
 	var movKeyDown:Int = 0;
+	var crashed:Bool = false;
 	
-	var nbSegment:Int = 500;
-	var longSegment:Int = 3;
+	//var nbSegment:Int = 500;
+	//var longSegment:Int = 3;
 	
 	override function update(dt:Float):Void
 	{
-		// dt = temps en millisecond entre deux frames ?
-		
-		//trace(dt);
-		
-		// move ---------------------------------
-		
-		if (Key.isDown(Key.UP) && movKeyDown != Key.DOWN)
-		{
-			movKeyDown = Key.UP;
-			layer_world.y += 5;
-		}
-		else if (Key.isDown(Key.DOWN) && movKeyDown != Key.UP)
-		{
-			movKeyDown = Key.DOWN;
-			layer_world.y -= 5;
-		}
-		else
-			movKeyDown = 0;
-		
 		// hero ---------------------------------
 		
 		if (Key.isDown(Key.RIGHT) && rotKeyDown != Key.LEFT)
@@ -157,84 +141,67 @@ class Main extends App
 		else
 			rotKeyDown = 0;
 		
-		// path ---------------------------------
-		
-		//ent_hero.angle = 0.0;
-		
-		/*var p:Array<PathSegment> = getPath();
-		
-		img_path.clear();
-		
-		var i:Int = 1;
-		
-		while (i < p.length)
-		{
-			img_path.lineStyle(5, 0xFF0000, 1 - (1 / nbSegment) * i);
-			img_path.moveTo(p[i - 1].x, p[i - 1].y);
-			img_path.lineTo(p[i].x, p[i].y);
-			i++;
-		}*/
+		// TODO : hum, le soucis c'est que chaque "mesure" doit être de distance en distance, et non de vélocité en vélocité
+		// que ce soir pour le path que pour le héros
 		
 		// move ---------------------------------
 		
-		/*if (p[0] != null)
+		if (!crashed)
 		{
-			layer_world.x -= p[0].velocity.x;
-			layer_world.y -= p[0].velocity.y;
+			var hero_v:Vector2D = ent_hero.vec_vel;			// velocity
+			var hero_px:Float = ent_hero.getWorldX();		// position X
+			var hero_py:Float = ent_hero.getWorldY();		// position Y
+			var hero_phm:Float = ent_hero.mass;				// mass
 			
-			ent_hero.vec_vel = p[0].velocity;
-		}*/
-		
-		// TODO : le hero ne suit pas la ligne (soucis de vel, comme elle est reset à chaque frame ?)
-		// le déplacement du héros ne suit peut-être pas le step du path (là il va beaucoup trop vite)
-		// de plus la vitesse doit pouvoir être modifiée par le joueur
-		
-		//else
-			//trace("CRASH");
-		
-		//var move:Vector2D = getPosition(layer_world.x, layer_world.y, 90, 5, new Vector2D(0, 0), dt);
-		
-		//layer_world.x -= move.x;
-		//layer_world.y -= move.y;
-		
-		//trace(layer_world.x, layer_world.y);
-		
-		//var dir:Vector2D = new Vector2D(0, 0);
-		
-		// --------------------------------------
-		
-		if (false)
-		{
-			var angle:Float = 0; 							// remplacer par value Hero
-			var vel:Vector2D = new Vector2D(250, 0); 		// remplacer par value Hero
+			var pos:Vector2D = new Vector2D(hero_px, hero_py);
+			//var pos:Vector2D = getSimplePosition(hero_px, hero_py, hero_v.angle(), hero_v, dt);
 			
-			var pos:Vector2D = getSimplePosition(ent_hero.getWorldX(), ent_hero.getWorldY(), angle, vel, 1);
+			for (ent in listEntities)
+			{
+				if (ent != ent_hero)
+					addGravity(pos, hero_v, ent.getX(), ent.getY(), hero_phm, ent.mass);
+			}
 			
-			vel.reset();
+			//pos.add(hero_v);
 			
-			var acc:Vector2D = new Vector2D(0, 0);
+			layer_world.x -= hero_v.x * dt;
+			layer_world.y -= hero_v.y * dt;
 			
-			addGravity(pos, acc, vel, ent_planet.getX(), ent_planet.getY(), ent_hero.mass, ent_planet2.mass);
-			addGravity(pos, acc, vel, ent_planet2.getX(), ent_planet2.getY(), ent_hero.mass, ent_planet2.mass);
-			
-			angle = vel.angle();
-			
-			// NOTE : angle, acc et vel ont été update et sont donc réutilisable pour ajouter d'autres influences
+			for (ent in listEntities)
+			{
+				if (ent != ent_hero)
+				{
+					var dx:Float = ent_hero.getWorldX() - ent.getX();
+					var dy:Float = ent_hero.getWorldY() - ent.getY();
+					var dist:Float = Math.sqrt(dx * dx + dy * dy);
+					
+					if (dist <= ent.solidRadius)
+					{
+						crashed = true;
+						break;
+					}
+				}
+			}
 		}
 		
-		// --------------------------------------
+		// path ---------------------------------
+		
+		// TEST
+		ent_hero.vec_vel = new Vector2D(0.5, 0);
+		//
+		
+		// TODO : calculer le nbSegment mais par rapport à une distance min/max ? tant que le tracé reste + ou - dans l'écran hein
 		
 		img_path.clear();
 		
+		var nbSegment:Int = 500;
 		var i:Int = 1;
 		
-		var a:Float = 0; // angle
-		var acc:Vector2D;
-		var v:Vector2D = new Vector2D(10, 0);
-		var p:Vector2D;
-		var px:Float = ent_hero.getWorldX();
-		var py:Float = ent_hero.getWorldY();
-		var phm:Float = ent_hero.mass;
+		var v:Vector2D = ent_hero.vec_vel;		// hero velocity
+		var px:Float = ent_hero.getWorldX();	// hero position X
+		var py:Float = ent_hero.getWorldY();	// hero position Y
+		var phm:Float = ent_hero.mass;			// hero mass
+		
 		var pl1x:Float = ent_planet.getX();
 		var pl1y:Float = ent_planet.getY();
 		var pl1m:Float = ent_planet.mass;
@@ -242,79 +209,137 @@ class Main extends App
 		var pl2y:Float = ent_planet2.getY();
 		var pl2m:Float = ent_planet2.mass;
 		
+		var p:Vector2D; 	// position
+		var dev:Vector2D;	// deviation
+		
+		var newVel:Vector2D = v.clone();
+		//var newAngle:Float = newVel.angle();
+		
 		var oldX:Float = px;
 		var oldY:Float = py;
 		
-		while (i < 20)
+		var isCrashed:Bool = false;
+		
+		while (i <= nbSegment)
 		{
-			p = getSimplePosition(px, py, a, v, 1);
+			//p = getSimplePosition(px, py, newAngle, newVel, 1);
+			p = new Vector2D(px, py);
+			//p.add(newVel);
 			
-			v.reset();
+			//dev = new Vector2D();
 			
-			acc = new Vector2D(0, 0);
+			//addGravity(p, dev, pl1x, pl1y, phm, pl1m);
+			addGravity(p, newVel, pl1x, pl1y, phm, pl1m);
+			//addGravity(p, dev, pl2x, pl2y, phm, pl2m);
+			addGravity(p, newVel, pl2x, pl2y, phm, pl2m);
 			
-			addGravity(p, acc, v, pl1x, pl1y, phm, pl1m);
-			addGravity(p, acc, v, pl2x, pl2y, phm, pl2m);
+			//newVel.add(dev);
+			//newAngle = newVel.angle();
 			
-			a = v.angle();
+			p.add(newVel);
 			
 			px = p.x;
 			py = p.y;
-			
-			if (isFirst)
-				trace(p);
 			
 			img_path.lineStyle(5, 0xFF0000, 1 - (1 / nbSegment) * i);
 			img_path.moveTo(oldX, oldY);
 			img_path.lineTo(px, py);
 			
+			var j:Int = 0;
+			
+			for (ent in listEntities)
+			{
+				if (ent != ent_hero)
+				{
+					var dx:Float = px - ent.getX();
+					var dy:Float = py - ent.getY();
+					var dist:Float = Math.sqrt(dx * dx + dy * dy);
+					
+					if (dist <= ent.solidRadius)
+					{
+						isCrashed = true;
+						break;
+					}
+				}
+			}
+			
 			oldX = px;
 			oldY = py;
+			
+			if (isCrashed)
+				break;
 			
 			i++;
 		}
 		
+		/*var hero_v:Vector2D = ent_hero.vec_vel;			// velocity
+		var hero_px:Float = ent_hero.getWorldX();		// position X
+		var hero_py:Float = ent_hero.getWorldY();		// position Y
+		var hero_phm:Float = ent_hero.mass;				// mass
+		
+		//var pos:Vector2D = new Vector2D(hero_px, hero_py);
+		//pos.add(hero_v);
+		
+		//layer_world.x -= pos.x * dt;
+		//layer_world.y -= pos.y * dt;
+		
+		layer_world.x -= hero_v.x * dt;
+		layer_world.y -= hero_v.y * dt;
+		
+		if (isFirst)
+			trace(hero_px, hero_py, layer_world.x, layer_world.y, hero_v, dt);*/
+		
+		/*for (ent in listEntities)
+		{
+			if (ent != ent_hero)
+				addGravity(pos, new Vector2D(), ent_hero.vec_vel, ent.getX(), ent.getY(), ent_hero.mass, ent.mass);
+		}*/
+		
+		//ent_hero.vec_vel.multiply(dt);
+		
 		// --------------------------------------
 		
+		firstInc++;
 		
-		if (firstInc > -1)
-		{
-			firstInc++;
+		if (firstInc > 20)
 			isFirst = false;
-		}
 	}
 	
-	public function getSimplePosition(x:Float, y:Float, angle:Float, vel:Vector2D, dt:Float):Vector2D
+	var firstInc:Int = 0; // TEST
+	var isFirst = true; // TEST
+	
+	public function getSimplePosition(x:Float, y:Float, angle:Float, vel:Vector2D, dt:Float = 1):Vector2D
 	{
-		// x : position actuelle en x
-		// y : position actuelle en y
-		// speed : vitesse de déplacement en pixel/frame
-		// angle : angle du mouvement en radian
-		// vel : vecteur de vélocité
-		// dt : variation du temps entre chaque frame (1 si parfait)
+		// x   			position actuelle en x
+		// y   			position actuelle en y
+		// angle   		angle du mouvement en radian
+		// vel   		vecteur de vélocité
+		// dt   		variation du temps entre chaque frame (1 si parfait)
 		
 		var pos:Vector2D = new Vector2D(x, y); // position actuelle
 		
-		// interpolation linéaire (speed en pixel/frame)
-		var projX:Float = vel.x * Math.cos(angle);
-		var projY:Float = vel.y * Math.sin(angle);
+		//var dirX:Int = (vel.x < 0)? -1 : 1;
+		//var dirY:Int = (vel.y < 0)? -1 : 1;
 		
-		pos.x += projX * dt;
-		pos.y += projY * dt;
+		// projection linéaire
+		//var projX:Float = vel.x * Math.cos(angle) * dirX;
+		//var projY:Float = vel.y * Math.sin(angle) * dirY;
 		
-		//pos.add(vel); // ? pas redondant d'ajouter speed PUIS vel ? est-ce que la vel n'est pas déjà speed ? si oui, comment modifier la vitesse en jeu, en jouant sur cette vel ?
+		pos.add(vel);
+		
+		//pos.x += projX * dt;
+		//pos.y += projY * dt;
 		
 		return pos;
 	}
 	
-	public function addGravity(pos:Vector2D, acc:Vector2D, vel:Vector2D, entX:Float, entY:Float, m:Float, M:Float):Void
+	public function addGravity(pos:Vector2D, vel:Vector2D, entX:Float, entY:Float, m:Float, M:Float):Void
 	{
-		// pos : position sans influence du point
-		// acc : vecteur d'accélération précédent
-		// vel : vélocité précédente
-		// entX/entY : position du corps influent
-		// m : masse du point
-		// M : masse du corps influent
+		// pos   		position sans influence du point
+		// vel   		vélocité précédente
+		// entX/entY	position du corps influent
+		// m   			masse du point
+		// M   			masse du corps influent
 		
 		var K:Float = 500;
 		
@@ -331,16 +356,13 @@ class Main extends App
 		var forceX:Float = magnitude * Math.cos(centerDirection);
 		var forceY:Float = magnitude * Math.sin(centerDirection);
 		
-		acc = new Vector2D(forceX, forceY); // a = F/m
+		var acc:Vector2D = new Vector2D(forceX, forceY); // a = F/m
 		acc.multiply(1 / m);
 		
 		vel.add(acc);
 		
 		pos.add(vel);
 	}
-	
-	var firstInc:Int = 0; // TEST
-	var isFirst = true; // TEST
 	
 	
 	/*var vec_disp:Vector2D = new Vector2D(posX, posY);

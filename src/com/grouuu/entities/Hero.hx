@@ -11,6 +11,8 @@ import h2d.Layers;
 class Hero extends Entity
 {
 	public var layerWorld:Layers;
+	public var decalX:Float;
+	public var decalY:Float;
 	
 	public var fuel(default, null):Float;
 	public var heat(default, null):Float;
@@ -24,7 +26,7 @@ class Hero extends Entity
 	
 	//public var vec_direction:Vector2D;
 	public var vec_vel:Vector2D;
-	public var angle:Float = 0.0;
+	//public var angle:Float = 0.0;
 	
 	override public function update(dt:Float):Void 
 	{
@@ -49,12 +51,22 @@ class Hero extends Entity
 	
 	public function getWorldX():Float
 	{
-		return getX() - layerWorld.x;
+		return -layerWorld.x + decalX;
 	}
 	
 	public function getWorldY():Float
 	{
-		return getY() - layerWorld.y;
+		return -layerWorld.y + decalY;
+	}
+	
+	override public function getX():Float 
+	{
+		return super.getX();
+	}
+	
+	override public function getY():Float 
+	{
+		return super.getY();
 	}
 	
 	public function getRotation():Float

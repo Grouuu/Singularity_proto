@@ -13,7 +13,7 @@ class Vector2D
 	public var x:Float = 0.0;
 	public var y:Float = 0.0;
 	
-	public function new(x:Float, y:Float):Void
+	public function new(x:Float = 0, y:Float = 0):Void
 	{
 		this.x = x;
 		this.y = y;
@@ -26,8 +26,6 @@ class Vector2D
 	
 	public function angle():Float
 	{
-		/*if (angle < 0)
-			angle += Math.PI * 2;*/
 		return Math.atan2(y, x);
 	}
 	
