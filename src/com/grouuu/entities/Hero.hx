@@ -51,22 +51,12 @@ class Hero extends Entity
 	
 	public function getWorldX():Float
 	{
-		return -layerWorld.x + decalX;
+		return -layerWorld.x + getX();
 	}
 	
 	public function getWorldY():Float
 	{
-		return -layerWorld.y + decalY;
-	}
-	
-	override public function getX():Float 
-	{
-		return super.getX();
-	}
-	
-	override public function getY():Float 
-	{
-		return super.getY();
+		return -layerWorld.y + getY();
 	}
 	
 	public function getRotation():Float
