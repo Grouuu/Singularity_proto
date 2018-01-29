@@ -68,7 +68,7 @@ class Main extends App
 		ent_planet.crop(0, 0);
 		ent_planet.resize(200, 200);
 		ent_planet.center();
-		ent_planet.mass = 20;
+		ent_planet.mass = 2;
 		ent_planet.solidRadius = 100;
 		
 		ent_planet2 = new Planet
@@ -80,7 +80,7 @@ class Main extends App
 		ent_planet2.crop(0, 0);
 		ent_planet2.resize(200, 200);
 		ent_planet2.center();
-		ent_planet2.mass = 20;
+		ent_planet2.mass = 2;
 		ent_planet2.solidRadius = 100;
 		
 		// hero ---------------------------------
@@ -94,7 +94,7 @@ class Main extends App
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
 		ent_hero.mass = 10;
-		ent_hero.vec_vel = new Vector2D(0.1, -0.2); // TEST
+		ent_hero.vec_vel = new Vector2D(15, -6); // TEST
 		
 		// entities -----------------------------
 		
@@ -105,9 +105,6 @@ class Main extends App
 		// path ---------------------------------
 		
 		img_path = new Graphics(s2d);
-		//img_path.lineStyle(5, 0xFF0000);
-		//img_path.x = layer_world.x;
-		//img_path.y = layer_world.y;
 		
 		layer_world.add(img_path, 0);
 	}
@@ -118,8 +115,8 @@ class Main extends App
 	var movKeyDown:Int = 0;
 	var crashed:Bool = false;
 	
-	//var nbSegment:Int = 500;
-	//var longSegment:Int = 3;
+	var firstInc:Int = 0; // TEST
+	var isFirst = true; // TEST
 	
 	override function update(dt:Float):Void
 	{
@@ -155,8 +152,8 @@ class Main extends App
 			layer_world.x -= nextStep[1].x;
 			layer_world.y -= nextStep[1].y;
 			
-			heroVel = nextStep[1];
-			heroVel.multiply(dt);
+			ent_hero.vec_vel = nextStep[1];
+			heroVel.multiply(dt); // TODO ?
 			
 			// path -----------------------------
 			
@@ -187,6 +184,8 @@ class Main extends App
 			}
 		}
 		
+		// TODO : test crash (path ET move)
+		
 		// --------------------------------------
 		
 		firstInc++;
@@ -200,6 +199,8 @@ class Main extends App
 		var pos:Vector2D = new Vector2D(currentX, currentY);
 		var m:Float = ent_hero.mass;
 		var K:Float = 500;
+		var capEnt:Float = 5;
+		var capMove:Float = 5;
 		
 		var devVel:Vector2D = new Vector2D();
 		
@@ -217,7 +218,8 @@ class Main extends App
 			
 			var magnitude:Float = (K * m * M) / (centerMagnitude * centerMagnitude); // F = K * m * M / r²
 			
-			// TODO : mettre un cap à cette magnitude ?
+			if (magnitude > capEnt) // TEST : cap la magnitude d'influence
+				magnitude = capEnt;
 			
 			var forceX:Float = magnitude * Math.cos(centerDirection);
 			var forceY:Float = magnitude * Math.sin(centerDirection);
@@ -232,11 +234,11 @@ class Main extends App
 		vel.multiply(dt);
 		vel.add(devVel);
 		
+		while (vel.magnitude() > capMove) // TEST : cap la magnitude totale
+			vel.multiply(0.9);
+		
 		pos.add(vel);
 		
 		return [pos, vel];
 	}
-	
-	var firstInc:Int = 0; // TEST
-	var isFirst = true; // TEST
 }
