@@ -122,18 +122,12 @@ class Main extends App
 	{
 		// key ----------------------------------
 		
-		if (Key.isDown(Key.RIGHT) && rotKeyDown != Key.LEFT)
-		{
-			rotKeyDown = Key.RIGHT;
-			ent_hero.rotation(ent_hero.incRotation * dt);
-		}
-		else if (Key.isDown(Key.LEFT) && rotKeyDown != Key.RIGHT)
-		{
-			rotKeyDown = Key.LEFT;
-			ent_hero.rotation(-ent_hero.incRotation * dt);
-		}
-		else
-			rotKeyDown = 0;
+		var inc:Float = 10 * Math.PI / 180;
+		
+		if (Key.isPressed(Key.RIGHT))
+			ent_hero.vec_vel.rotate(inc * dt);
+		else if (Key.isPressed(Key.LEFT))
+			ent_hero.vec_vel.rotate(-inc * dt);
 		
 		// position -----------------------------
 		

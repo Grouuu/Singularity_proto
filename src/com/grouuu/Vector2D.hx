@@ -34,6 +34,12 @@ class Vector2D
 		return new Vector2D(x / magnitude(), y / magnitude());
 	}
 	
+	public function rotate(rad:Float):Void
+	{
+		x = x * Math.cos(rad) - y * Math.sin(rad);
+		y = x * Math.sin(rad) + y * Math.cos(rad);
+	}
+	
 	public function minus(vector:Vector2D):Void
 	{
 		x -= vector.x;
