@@ -34,34 +34,49 @@ class Vector2D
 		return new Vector2D(x / magnitude(), y / magnitude());
 	}
 	
-	public function rotate(rad:Float):Void
+	public function rotate(rad:Float):Vector2D
 	{
 		x = x * Math.cos(rad) - y * Math.sin(rad);
 		y = x * Math.sin(rad) + y * Math.cos(rad);
+		
+		return this;
 	}
 	
-	public function minus(vector:Vector2D):Void
+	public function normalize():Vector2D
+	{
+		return clone().multiply(1 / magnitude());
+	}
+	
+	public function minus(vector:Vector2D):Vector2D
 	{
 		x -= vector.x;
 		y -= vector.y;
+		
+		return this;
 	}
 	
-	public function add(vector:Vector2D):Void
+	public function add(vector:Vector2D):Vector2D
 	{
 		x += vector.x;
 		y += vector.y;
+		
+		return this;
 	}
 	
-	public function multiply(scalar:Float):Void
+	public function multiply(scalar:Float):Vector2D
 	{
 		x *= scalar;
 		y *= scalar;
+		
+		return this;
 	}
 	
-	public function reset():Void
+	public function reset():Vector2D
 	{
 		x = 0.0;
 		y = 0.0;
+		
+		return this;
 	}
 	
 	public function clone():Vector2D

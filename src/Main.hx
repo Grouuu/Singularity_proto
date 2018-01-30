@@ -17,11 +17,11 @@ import hxd.Res;
  * @author Grouuu
  */
 
-typedef PathSegment =
+typedef NextStep =
 {
-	var x:Float;
-	var y:Float;
+	var position:Vector2D;
 	var velocity:Vector2D;
+	var positionHit:Vector2D;
 }
 
 class Main extends App
@@ -69,7 +69,7 @@ class Main extends App
 		ent_planet.resize(200, 200);
 		ent_planet.center();
 		ent_planet.mass = 2;
-		ent_planet.solidRadius = 100;
+		ent_planet.solidRadius = 80;
 		
 		ent_planet2 = new Planet
 		(
@@ -81,7 +81,7 @@ class Main extends App
 		ent_planet2.resize(200, 200);
 		ent_planet2.center();
 		ent_planet2.mass = 2;
-		ent_planet2.solidRadius = 100;
+		ent_planet2.solidRadius = 80;
 		
 		// hero ---------------------------------
 		
@@ -91,6 +91,8 @@ class Main extends App
 			s2d.width >> 1, s2d.width >> 1
 		);
 		
+		ent_hero.decalX = ent_hero.getX();
+		ent_hero.decalY = ent_hero.getY();
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
 		ent_hero.mass = 10;
@@ -113,7 +115,7 @@ class Main extends App
 	
 	var rotKeyDown:Int = 0;
 	var movKeyDown:Int = 0;
-	var crashed:Bool = false;
+	var isCrashed:Bool = false;
 	
 	var firstInc:Int = 0; // TEST
 	var isFirst = true; // TEST
@@ -122,18 +124,28 @@ class Main extends App
 	{
 		// key ----------------------------------
 		
-		var inc:Float = 10 * Math.PI / 180;
+		var incRot:Float = 10 * Math.PI / 180;
+		var incSpeed:Float = 0.1; // percent ?
+		
+		// rotation
 		
 		if (Key.isPressed(Key.RIGHT))
-			ent_hero.vec_vel.rotate(inc * dt);
+			ent_hero.vec_vel.rotate(incRot);
 		else if (Key.isPressed(Key.LEFT))
-			ent_hero.vec_vel.rotate(-inc * dt);
+			ent_hero.vec_vel.rotate( -incRot);
+		
+		// speed
+		
+		if (Key.isPressed(Key.UP))
+			ent_hero.vec_vel.multiply(1 + incSpeed);
+		else if (Key.isPressed(Key.DOWN))
+			ent_hero.vec_vel.multiply(1 - incSpeed);
 		
 		// position -----------------------------
 		
-		if (!crashed)
+		if (!isCrashed)
 		{
-			var nextStep:Array<Vector2D>;
+			var nextStep:NextStep;
 			
 			// move -----------------------------
 			
@@ -141,44 +153,65 @@ class Main extends App
 			var heroY:Float = ent_hero.getWorldY();
 			var heroVel:Vector2D = ent_hero.vec_vel;
 			
-			nextStep = getNextPosition(heroX, heroY, heroVel, dt);
+			nextStep = getNextPosition(heroX, heroY, heroVel);
 			
-			layer_world.x -= nextStep[1].x;
-			layer_world.y -= nextStep[1].y;
-			
-			ent_hero.vec_vel = nextStep[1];
-			heroVel.multiply(dt); // TODO ?
-			
-			// path -----------------------------
-			
-			img_path.clear();
-			
-			var nbSegment:Int = 100;
-			
-			var nextX:Float = ent_hero.getWorldX();
-			var nextY:Float = ent_hero.getWorldY();
-			var nextVel:Vector2D = ent_hero.vec_vel.clone();
-			var oldX:Float = nextX;
-			var oldY:Float = nextY;
-			
-			for (i in 0...nbSegment)
+			if (nextStep.positionHit == null)
 			{
-				nextStep = getNextPosition(nextX, nextY, nextVel, 1);
+				nextStep.velocity.multiply(dt);
 				
-				nextX = nextStep[0].x;
-				nextY = nextStep[0].y;
-				nextVel = nextStep[1];
+				layer_world.x -= nextStep.velocity.x;
+				layer_world.y -= nextStep.velocity.y;
 				
-				img_path.lineStyle(5, 0xFF0000, 1 - (1 / nbSegment) * i);
-				img_path.moveTo(oldX, oldY);
-				img_path.lineTo(nextX, nextY);
+				ent_hero.vec_vel = nextStep.velocity;
 				
-				oldX = nextX;
-				oldY = nextY;
+				// path -----------------------------
+				
+				img_path.clear();
+				
+				var nbSegment:Int = 100;
+				
+				var nextX:Float = ent_hero.getWorldX();
+				var nextY:Float = ent_hero.getWorldY();
+				var nextVel:Vector2D = ent_hero.vec_vel.clone();
+				var oldX:Float = nextX;
+				var oldY:Float = nextY;
+				
+				for (i in 0...nbSegment)
+				{
+					nextStep = getNextPosition(nextX, nextY, nextVel);
+					
+					nextX = nextStep.position.x;
+					nextY = nextStep.position.y;
+					nextVel = nextStep.velocity;
+					
+					if (nextStep.positionHit != null)
+					{
+						nextX = oldX + nextStep.positionHit.x;
+						nextY = oldY + nextStep.positionHit.y;
+					}
+					
+					img_path.lineStyle(5, 0xFF0000, 1 - (1 / nbSegment) * i);
+					img_path.moveTo(oldX, oldY);
+					img_path.lineTo(nextX, nextY);
+					
+					oldX = nextX;
+					oldY = nextY;
+					
+					if (nextStep.positionHit != null)
+						break;
+				}
+				
+				if (isFirst)
+					trace(layer_world.x, layer_world.y);
+			}
+			else
+			{
+				isCrashed = true;
+				
+				layer_world.x -= -nextStep.positionHit.x;
+				layer_world.y -= -nextStep.positionHit.y;
 			}
 		}
-		
-		// TODO : test crash (path ET move)
 		
 		// --------------------------------------
 		
@@ -188,15 +221,17 @@ class Main extends App
 			isFirst = false;
 	}
 	
-	public function getNextPosition(currentX:Float, currentY:Float, currentVel:Vector2D, dt:Float):Array<Vector2D>
+	public function getNextPosition(currentX:Float, currentY:Float, currentVel:Vector2D):NextStep
 	{
 		var pos:Vector2D = new Vector2D(currentX, currentY);
+		var vel:Vector2D = currentVel.clone();
 		var m:Float = ent_hero.mass;
 		var K:Float = 500;
 		var capEnt:Float = 5;
 		var capMove:Float = 5;
 		
 		var devVel:Vector2D = new Vector2D();
+		var posHit:Vector2D = null;
 		
 		for (ent in listEntities)
 		{
@@ -212,9 +247,6 @@ class Main extends App
 			
 			var magnitude:Float = (K * m * M) / (centerMagnitude * centerMagnitude); // F = K * m * M / r²
 			
-			if (magnitude > capEnt) // TEST : cap la magnitude d'influence
-				magnitude = capEnt;
-			
 			var forceX:Float = magnitude * Math.cos(centerDirection);
 			var forceY:Float = magnitude * Math.sin(centerDirection);
 			
@@ -222,17 +254,24 @@ class Main extends App
 			acc.multiply(1 / m);
 			
 			devVel.add(acc);
+			
+			if (centerMagnitude <= ent.solidRadius)
+			{
+				posHit = toCenter.normalize().multiply(ent.solidRadius / centerMagnitude);
+				break;
+			}
 		}
 		
-		var vel:Vector2D = currentVel.clone();
-		vel.multiply(dt);
 		vel.add(devVel);
 		
-		while (vel.magnitude() > capMove) // TEST : cap la magnitude totale
-			vel.multiply(0.9);
+		// TODO : j'ai trop besoin de cap les magnitude, je trouve ça pas normal
+		// voir pourquoi l'accélération est si importante
+		
+		while (vel.magnitude() > capMove)
+			vel = vel.normalize().multiply(capMove);
 		
 		pos.add(vel);
 		
-		return [pos, vel];
+		return { position: pos, velocity: vel, positionHit: posHit };
 	}
 }
