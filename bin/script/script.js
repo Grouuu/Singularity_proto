@@ -256,9 +256,10 @@ hxd_App.prototype = {
 	,__class__: hxd_App
 };
 var Main = function() {
+	this.isCrashed = false;
 	this.isFirst = true;
 	this.firstInc = 0;
-	this.isCrashed = false;
+	this.listSolid = [];
 	this.listEntities = [];
 	hxd_App.call(this);
 };
@@ -286,14 +287,15 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.ent_planet2.mass = 2;
 		this.ent_planet2.solidRadius = 80;
 		this.ent_hero = new com_grouuu_entities_Hero(new h2d_Bitmap(h2d_Tile.fromColor(16777215,32,32),this.s2d),this.s2d.width >> 1,this.s2d.width >> 1);
-		this.ent_hero.decalX = this.ent_hero.getX();
-		this.ent_hero.decalY = this.ent_hero.getY();
 		this.ent_hero.layerWorld = this.layer_world;
 		this.ent_hero.center();
 		this.ent_hero.mass = 10;
-		this.ent_hero.vec_vel = new com_grouuu_Vector2D(15,-6);
+		this.ent_hero.velocity = new com_grouuu_Vector2D(15,-6);
+		this.listEntities.push(this.ent_hero);
 		this.listEntities.push(this.ent_planet);
 		this.listEntities.push(this.ent_planet2);
+		this.listSolid.push(this.ent_planet);
+		this.listSolid.push(this.ent_planet2);
 		this.img_path = new h2d_Graphics(this.s2d);
 		this.layer_world.addChildAt(this.img_path,0);
 	}
@@ -301,20 +303,20 @@ Main.prototype = $extend(hxd_App.prototype,{
 		var incRot = 10 * Math.PI / 180;
 		var incSpeed = 0.1;
 		if(hxd_Key.isPressed(39)) {
-			this.ent_hero.vec_vel.rotate(incRot);
+			this.ent_hero.velocity.rotate(incRot);
 		} else if(hxd_Key.isPressed(37)) {
-			this.ent_hero.vec_vel.rotate(-incRot);
+			this.ent_hero.velocity.rotate(-incRot);
 		}
 		if(hxd_Key.isPressed(38)) {
-			this.ent_hero.vec_vel.multiply(1 + incSpeed);
+			this.ent_hero.velocity.multiply(1 + incSpeed);
 		} else if(hxd_Key.isPressed(40)) {
-			this.ent_hero.vec_vel.multiply(1 - incSpeed);
+			this.ent_hero.velocity.multiply(1 - incSpeed);
 		}
 		if(!this.isCrashed) {
 			var nextStep;
-			var heroX = this.ent_hero.getWorldX();
-			var heroY = this.ent_hero.getWorldY();
-			var heroVel = this.ent_hero.vec_vel;
+			var heroX = this.ent_hero.get_worldX();
+			var heroY = this.ent_hero.get_worldY();
+			var heroVel = this.ent_hero.velocity;
 			nextStep = this.getNextPosition(heroX,heroY,heroVel);
 			if(nextStep.positionHit == null) {
 				nextStep.velocity.multiply(dt);
@@ -324,12 +326,12 @@ Main.prototype = $extend(hxd_App.prototype,{
 				var _g1 = this.layer_world;
 				_g1.posChanged = true;
 				_g1.y -= nextStep.velocity.y;
-				this.ent_hero.vec_vel = nextStep.velocity;
+				this.ent_hero.velocity = nextStep.velocity;
 				this.img_path.clear();
 				var nbSegment = 100;
-				var nextX = this.ent_hero.getWorldX();
-				var nextY = this.ent_hero.getWorldY();
-				var nextVel = this.ent_hero.vec_vel.clone();
+				var nextX = heroX;
+				var nextY = heroY;
+				var nextVel = this.ent_hero.velocity.clone();
 				var oldX = nextX;
 				var oldY = nextY;
 				var _g11 = 0;
@@ -356,12 +358,8 @@ Main.prototype = $extend(hxd_App.prototype,{
 						break;
 					}
 				}
-				if(this.isFirst) {
-					haxe_Log.trace(this.layer_world.x,{ fileName : "Main.hx", lineNumber : 205, className : "Main", methodName : "update", customParams : [this.layer_world.y]});
-				}
 			} else {
 				this.isCrashed = true;
-				haxe_Log.trace(this.layer_world.x,{ fileName : "Main.hx", lineNumber : 211, className : "Main", methodName : "update", customParams : [this.layer_world.y,nextStep.positionHit]});
 				var _g3 = this.layer_world;
 				_g3.posChanged = true;
 				_g3.x -= -nextStep.positionHit.x;
@@ -385,12 +383,12 @@ Main.prototype = $extend(hxd_App.prototype,{
 		var devVel = new com_grouuu_Vector2D();
 		var posHit = null;
 		var _g = 0;
-		var _g1 = this.listEntities;
+		var _g1 = this.listSolid;
 		while(_g < _g1.length) {
 			var ent = _g1[_g];
 			++_g;
-			var entX = ent.getX();
-			var entY = ent.getY();
+			var entX = ent.get_x();
+			var entY = ent.get_y();
 			var M = ent.mass;
 			var toCenter = new com_grouuu_Vector2D(entX,entY);
 			toCenter.minus(pos);
@@ -627,8 +625,6 @@ var com_grouuu_Entity = function(bmp,x,y) {
 	if(x == null) {
 		x = 0.0;
 	}
-	this.solidRadius = 0.0;
-	this.mass = 0.0;
 	bmp.posChanged = true;
 	bmp.x = x;
 	bmp.posChanged = true;
@@ -657,23 +653,14 @@ com_grouuu_Entity.prototype = {
 		_this2.posChanged = true;
 		_this2.scaleY = v1 / (_this3.yMax - _this3.yMin);
 	}
-	,getX: function() {
+	,get_x: function() {
 		return this.bmp.x;
 	}
-	,getY: function() {
+	,get_y: function() {
 		return this.bmp.y;
 	}
 	,__class__: com_grouuu_Entity
 };
-var com_grouuu_Sphere = function(bmp,x,y) {
-	com_grouuu_Entity.call(this,bmp,x,y);
-};
-$hxClasses["com.grouuu.Sphere"] = com_grouuu_Sphere;
-com_grouuu_Sphere.__name__ = ["com","grouuu","Sphere"];
-com_grouuu_Sphere.__super__ = com_grouuu_Entity;
-com_grouuu_Sphere.prototype = $extend(com_grouuu_Entity.prototype,{
-	__class__: com_grouuu_Sphere
-});
 var com_grouuu_Vector2D = function(x,y) {
 	if(y == null) {
 		y = 0;
@@ -723,28 +710,40 @@ com_grouuu_Vector2D.prototype = {
 	}
 	,__class__: com_grouuu_Vector2D
 };
-var com_grouuu_entities_Hero = function(bmp,x,y) {
+var com_grouuu_entities_Solid = function(bmp,x,y) {
+	this.solidRadius = 0.0;
+	this.mass = 0.0;
 	com_grouuu_Entity.call(this,bmp,x,y);
+};
+$hxClasses["com.grouuu.entities.Solid"] = com_grouuu_entities_Solid;
+com_grouuu_entities_Solid.__name__ = ["com","grouuu","entities","Solid"];
+com_grouuu_entities_Solid.__super__ = com_grouuu_Entity;
+com_grouuu_entities_Solid.prototype = $extend(com_grouuu_Entity.prototype,{
+	__class__: com_grouuu_entities_Solid
+});
+var com_grouuu_entities_Hero = function(bmp,x,y) {
+	this.velocity = new com_grouuu_Vector2D();
+	com_grouuu_entities_Solid.call(this,bmp,x,y);
 };
 $hxClasses["com.grouuu.entities.Hero"] = com_grouuu_entities_Hero;
 com_grouuu_entities_Hero.__name__ = ["com","grouuu","entities","Hero"];
-com_grouuu_entities_Hero.__super__ = com_grouuu_Entity;
-com_grouuu_entities_Hero.prototype = $extend(com_grouuu_Entity.prototype,{
-	getWorldX: function() {
-		return -this.layerWorld.x + this.getX();
+com_grouuu_entities_Hero.__super__ = com_grouuu_entities_Solid;
+com_grouuu_entities_Hero.prototype = $extend(com_grouuu_entities_Solid.prototype,{
+	get_worldX: function() {
+		return -this.layerWorld.x + this.get_x();
 	}
-	,getWorldY: function() {
-		return -this.layerWorld.y + this.getY();
+	,get_worldY: function() {
+		return -this.layerWorld.y + this.get_y();
 	}
 	,__class__: com_grouuu_entities_Hero
 });
 var com_grouuu_entities_Planet = function(bmp,x,y) {
-	com_grouuu_Sphere.call(this,bmp,x,y);
+	com_grouuu_entities_Solid.call(this,bmp,x,y);
 };
 $hxClasses["com.grouuu.entities.Planet"] = com_grouuu_entities_Planet;
 com_grouuu_entities_Planet.__name__ = ["com","grouuu","entities","Planet"];
-com_grouuu_entities_Planet.__super__ = com_grouuu_Sphere;
-com_grouuu_entities_Planet.prototype = $extend(com_grouuu_Sphere.prototype,{
+com_grouuu_entities_Planet.__super__ = com_grouuu_entities_Solid;
+com_grouuu_entities_Planet.prototype = $extend(com_grouuu_entities_Solid.prototype,{
 	__class__: com_grouuu_entities_Planet
 });
 var format_gif_Block = $hxClasses["format.gif.Block"] = { __ename__ : true, __constructs__ : ["BFrame","BExtension","BEOF"] };

@@ -6,8 +6,6 @@ package com.grouuu;
  */
 
 // https://code.tutsplus.com/tutorials/gravity-in-action--active-8915
-// https://code.tutsplus.com/tutorials/euclidean-vectors-in-flash--active-8192
-// http://www.al.lu/physics/premiere/robinet/cinematique.pdf
 class Vector2D
 {
 	public var x:Float = 0.0;

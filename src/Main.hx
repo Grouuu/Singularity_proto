@@ -4,6 +4,7 @@ import com.grouuu.entities.Hero;
 import com.grouuu.entities.Planet;
 import com.grouuu.Entity;
 import com.grouuu.Vector2D;
+import com.grouuu.entities.Solid;
 import h2d.Bitmap;
 import h2d.Graphics;
 import h2d.Layers;
@@ -31,12 +32,17 @@ class Main extends App
 	var layer_world:Layers;
 	
 	var listEntities:Array<Entity> = [];
+	var listSolid:Array<Solid> = [];
+	
 	var ent_hero:Hero;
 	var ent_planet:Planet;
 	var ent_planet2:Planet;
 	
 	var img_bg:Bitmap;
 	var img_path:Graphics;
+	
+	var firstInc:Int = 0; // TEST
+	var isFirst = true; // TEST
 	
 	// INIT ///////////////////////////////////////////////////////////////////////////////////////
 	
@@ -91,18 +97,20 @@ class Main extends App
 			s2d.width >> 1, s2d.width >> 1
 		);
 		
-		ent_hero.decalX = ent_hero.getX();
-		ent_hero.decalY = ent_hero.getY();
 		ent_hero.layerWorld = layer_world;
 		ent_hero.center();
 		ent_hero.mass = 10;
-		ent_hero.vec_vel = new Vector2D(15, -6); // TEST
+		
+		ent_hero.velocity = new Vector2D(15, -6); // TEST
 		
 		// entities -----------------------------
 		
-		//listEntities.push(ent_hero);
+		listEntities.push(ent_hero);
 		listEntities.push(ent_planet);
 		listEntities.push(ent_planet2);
+		
+		listSolid.push(ent_planet);
+		listSolid.push(ent_planet2);
 		
 		// path ---------------------------------
 		
@@ -117,9 +125,6 @@ class Main extends App
 	var movKeyDown:Int = 0;
 	var isCrashed:Bool = false;
 	
-	var firstInc:Int = 0; // TEST
-	var isFirst = true; // TEST
-	
 	override function update(dt:Float):Void
 	{
 		// key ----------------------------------
@@ -130,16 +135,16 @@ class Main extends App
 		// rotation
 		
 		if (Key.isPressed(Key.RIGHT))
-			ent_hero.vec_vel.rotate(incRot);
+			ent_hero.velocity.rotate(incRot);
 		else if (Key.isPressed(Key.LEFT))
-			ent_hero.vec_vel.rotate( -incRot);
+			ent_hero.velocity.rotate( -incRot);
 		
 		// speed
 		
 		if (Key.isPressed(Key.UP))
-			ent_hero.vec_vel.multiply(1 + incSpeed);
+			ent_hero.velocity.multiply(1 + incSpeed);
 		else if (Key.isPressed(Key.DOWN))
-			ent_hero.vec_vel.multiply(1 - incSpeed);
+			ent_hero.velocity.multiply(1 - incSpeed);
 		
 		// position -----------------------------
 		
@@ -149,9 +154,9 @@ class Main extends App
 			
 			// move -----------------------------
 			
-			var heroX:Float = ent_hero.getWorldX();
-			var heroY:Float = ent_hero.getWorldY();
-			var heroVel:Vector2D = ent_hero.vec_vel;
+			var heroX:Float = ent_hero.worldX;
+			var heroY:Float = ent_hero.worldY;
+			var heroVel:Vector2D = ent_hero.velocity;
 			
 			nextStep = getNextPosition(heroX, heroY, heroVel);
 			
@@ -162,7 +167,7 @@ class Main extends App
 				layer_world.x -= nextStep.velocity.x;
 				layer_world.y -= nextStep.velocity.y;
 				
-				ent_hero.vec_vel = nextStep.velocity;
+				ent_hero.velocity = nextStep.velocity;
 				
 				// path -----------------------------
 				
@@ -170,9 +175,9 @@ class Main extends App
 				
 				var nbSegment:Int = 100;
 				
-				var nextX:Float = ent_hero.getWorldX();
-				var nextY:Float = ent_hero.getWorldY();
-				var nextVel:Vector2D = ent_hero.vec_vel.clone();
+				var nextX:Float = heroX;
+				var nextY:Float = heroY;
+				var nextVel:Vector2D = ent_hero.velocity.clone();
 				var oldX:Float = nextX;
 				var oldY:Float = nextY;
 				
@@ -200,9 +205,6 @@ class Main extends App
 					if (nextStep.positionHit != null)
 						break;
 				}
-				
-				if (isFirst)
-					trace(layer_world.x, layer_world.y);
 			}
 			else
 			{
@@ -233,10 +235,10 @@ class Main extends App
 		var devVel:Vector2D = new Vector2D();
 		var posHit:Vector2D = null;
 		
-		for (ent in listEntities)
+		for (ent in listSolid)
 		{
-			var entX:Float = ent.getX();
-			var entY:Float = ent.getY();
+			var entX:Float = ent.x;
+			var entY:Float = ent.y;
 			var M:Float = ent.mass;
 			
 			var toCenter:Vector2D = new Vector2D(entX, entY);

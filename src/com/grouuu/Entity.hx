@@ -1,8 +1,6 @@
 package com.grouuu;
 
-import format.swf.Data.FontLayoutData;
 import h2d.Bitmap;
-import h2d.Tile;
 
 /**
  * ...
@@ -10,12 +8,10 @@ import h2d.Tile;
  */
 class Entity
 {
-	public var bmp:Bitmap;
+	@:isVar public var x(get, set):Float = 0.0;
+	@:isVar public var y(get, set):Float = 0.0;
 	
-	public var isMovable:Bool = false;
-	
-	public var mass:Float = 0.0;
-	public var solidRadius:Float = 0.0;
+	private var bmp:Bitmap;
 	
 	public function new(bmp:Bitmap, ?x:Float = 0.0, ?y:Float = 0.0)
 	{
@@ -50,6 +46,12 @@ class Entity
 		bmp.setScale(scale);
 	}
 	
+	// TODO : vaut mieux resize le bitmap ou le tile ? attention en centrage
+	/*public function scaleToSize(w:Int, h:Int):Void
+	{
+		bmp.tile.scaleToSize(w, h);
+	}*/
+	
 	public function resize(w:Int, h:Int):Void
 	{
 		bmp.scaleX = w * bmp.scaleX / bmp.getSize().width;
@@ -58,11 +60,8 @@ class Entity
 	
 	public function move(x:Float, y:Float):Void
 	{
-		if (isMovable)
-		{
-			bmp.x = x;
-			bmp.y = y;
-		}
+		bmp.x = x;
+		bmp.y = y;
 	}
 	
 	public function rotation(increment:Float):Void // value in degree
@@ -70,18 +69,18 @@ class Entity
 		bmp.rotation += increment * Math.PI / 180;
 	}
 	
-	// POSITION ///////////////////////////////////////////////////////////////////////////////////
+	// INFO ///////////////////////////////////////////////////////////////////////////////////////
 
-	public function distanceFrom(other:Entity):Float
+	public function distanceTo(other:Entity):Float
 	{
-		var dx = getX() - other.getX();
-		var dy = getY() - other.getY();
+		var dx = x - other.x;
+		var dy = y - other.y;
 		
 		return Math.sqrt(dx * dx + dy * dy);
 	}
 	
-	// GETTER / SETTER ////////////////////////////////////////////////////////////////////////////
-	
-	public function getX():Float	return bmp.x;
-	public function getY():Float	return bmp.y;
+	public function get_x():Float					return bmp.x;
+	public function set_x(value:Float):Float		return bmp.x = value;
+	public function get_y():Float					return bmp.y;
+	public function set_y(value:Float):Float		return bmp.y = value;
 }

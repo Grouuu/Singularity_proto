@@ -8,83 +8,36 @@ import h2d.Layers;
  * ...
  * @author Grouuu
  */
-class Hero extends Entity
+class Hero extends Solid
 {
 	public var layerWorld:Layers;
-	public var decalX:Float;
-	public var decalY:Float;
 	
-	public var fuel(default, null):Float;
-	public var heat(default, null):Float;
-	public var energy(default, null):Float;
-	public var radiation(default, null):Float;
-	public var speed(default, null):Float;
-	public var oxygene(default, null):Float;
-	public var armor(default, null):Float;
+	public var worldX(get, null):Float = 0.0;
+	public var worldY(get, null):Float = 0.0;
+	public var velocity:Vector2D = new Vector2D();
 	
-	public var incRotation(default, null):Float = 2.0;
-	
-	//public var vec_direction:Vector2D;
-	public var vec_vel:Vector2D;
-	//public var angle:Float = 0.0;
+	//public var fuel(default, null):Float;
+	//public var heat(default, null):Float;
+	//public var energy(default, null):Float;
+	//public var radiation(default, null):Float;
+	//public var speed(default, null):Float;
+	//public var oxygene(default, null):Float;
+	//public var armor(default, null):Float;
 	
 	override public function update(dt:Float):Void 
 	{
 		super.update(dt);
 	}
 	
-	public function changeFuel(value:Float):Float		{ fuel = value; return fuel; }
-	public function changeHeat(value:Float):Float		{ heat = value; return heat; }
-	public function changeEnergy(value:Float):Float		{ energy = value; return energy; }
-	public function changeRadiation(value:Float):Float	{ radiation = value; return radiation; }
-	//public function changeGravity(value:Float):Float	{ gravity = value; return gravity; }
-	public function changeSpeed(value:Float):Float		{ speed = value; return speed; }
-	public function changeOxygene(value:Float):Float	{ oxygene = value; return oxygene; }
-	public function changeArmor(value:Float):Float		{ armor = value; return armor; }
+	// INFO ///////////////////////////////////////////////////////////////////////////////////////
 	
-	public function isAlive():Bool
-	{
-		return true;
-	}
-	
-	// POSITION ///////////////////////////////////////////////////////////////////////////////////
-	
-	public function getWorldX():Float
-	{
-		return -layerWorld.x + getX();
-	}
-	
-	public function getWorldY():Float
-	{
-		return -layerWorld.y + getY();
-	}
-	
-	public function getRotation():Float
-	{
-		return bmp.rotation; // in rad
-		//return bmp.rotation * 180 / Math.PI; // in degree
-	}
-
-	override public function distanceFrom(other:Entity):Float
+	override public function distanceTo(other:Entity):Float
 	{
 		throw "Don't use this method, use instead distanceFromWorld";
 		
 		return 0.0;
 	}
 	
-	public function distanceFromWorld(other:Entity):Float
-	{
-		var dx:Float = getWorldX() - other.getX();
-		var dy:Float = getWorldY() - other.getY();
-		
-		return Math.sqrt(dx * dx + dy * dy);
-	}
-	
-	public function angleFromWorld(other:Entity):Float
-	{
-		var dx = other.getX() - getWorldX();
-		var dy = other.getY() - getWorldY();
-		
-		return Math.atan2(dy, dx);
-	}
+	public function get_worldX():Float		return -layerWorld.x + x;
+	public function get_worldY():Float		return -layerWorld.y + y;
 }
