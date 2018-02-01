@@ -1,0 +1,10 @@
+s2d.setFixedSize
+hxd.Save
+preload sound : Res.load("foo").toSound().getData()
+tiles.sub(x, y, w, h, dx, dy).scaleToSize(w, h)
+hxd.Rand ?
+image de fond (sans alpha) : blendMode = None (Alpha par défaut)
+h2d.Anim
+hxd.Res.initEmbed();
+Data : private typedef Init = haxe.macro.MacroType < [cdb.Module.build("data.cdb")] >
+entity.update(dt) (sur un for(e in entities.copy())
