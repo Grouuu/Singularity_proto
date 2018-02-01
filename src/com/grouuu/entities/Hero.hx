@@ -1,6 +1,6 @@
 package com.grouuu.entities;
 
-import com.grouuu.Entity;
+import com.grouuu.entities.Entity;
 import com.grouuu.Vector2D;
 import h2d.Layers;
 

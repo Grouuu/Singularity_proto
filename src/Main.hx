@@ -1,8 +1,9 @@
 package ;
 
+import com.grouuu.Data;
 import com.grouuu.entities.Hero;
 import com.grouuu.entities.Planet;
-import com.grouuu.Entity;
+import com.grouuu.entities.Entity;
 import com.grouuu.Vector2D;
 import com.grouuu.entities.Solid;
 import h2d.Bitmap;
@@ -57,6 +58,13 @@ class Main extends App
 	
 	override function init():Void
 	{
+		// data ---------------------------------
+		
+		//Data.load(null);
+		Data.load(hxd.Res.db.entry.getText());
+		
+		// layers -------------------------------
+		
 		layer_world = new Layers(s2d);
 		
 		// background ---------------------------

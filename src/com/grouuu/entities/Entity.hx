@@ -1,4 +1,4 @@
-package com.grouuu;
+package com.grouuu.entities;
 
 import h2d.Bitmap;
 
