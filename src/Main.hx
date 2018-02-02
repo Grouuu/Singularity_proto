@@ -60,8 +60,22 @@ class Main extends App
 	{
 		// data ---------------------------------
 		
-		//Data.load(null);
 		Data.load(hxd.Res.db.entry.getText());
+		
+		var level = Data.levels.all[0];
+		
+		//var entities = Data.entities;
+		//var level:Data.Levels;
+		//var level:Data.Levels = Data.levels.all[0];
+		
+		//trace(Type.getClassName(Type.getClass(Data.levels.get(level_1))));
+		trace(level);
+		trace(Type.getClass(level));
+		trace(Type.getClassName(Type.getClass(level)));
+		
+		//trace(Data.entities);
+		//trace(Data.levels);
+		//trace(Data.levels.get(level_1));
 		
 		// layers -------------------------------
 		
@@ -73,7 +87,7 @@ class Main extends App
 		
 		// planet -------------------------------
 		
-		ent_planet = new Planet
+		/*ent_planet = new Planet
 		(
 			new Bitmap(Res.spritesheet.toTile(), layer_world),
 			500, 500
@@ -95,7 +109,7 @@ class Main extends App
 		ent_planet2.resize(200, 200);
 		ent_planet2.center();
 		ent_planet2.mass = 2;
-		ent_planet2.solidRadius = 80;
+		ent_planet2.solidRadius = 80;*/
 		
 		// hero ---------------------------------
 		
@@ -113,18 +127,25 @@ class Main extends App
 		
 		// entities -----------------------------
 		
-		listEntities.push(ent_hero);
-		listEntities.push(ent_planet);
-		listEntities.push(ent_planet2);
+		//listEntities.push(ent_hero);
+		//listEntities.push(ent_planet);
+		//listEntities.push(ent_planet2);
 		
-		listSolid.push(ent_planet);
-		listSolid.push(ent_planet2);
+		//listSolid.push(ent_planet);
+		//listSolid.push(ent_planet2);
 		
 		// path ---------------------------------
 		
 		img_path = new Graphics(s2d);
 		
 		layer_world.add(img_path, 0);
+	}
+	
+	// FACTORIES //////////////////////////////////////////////////////////////////////////////////
+	
+	public function createEntity():Solid
+	{
+		return null;
 	}
 	
 	// UPDATE /////////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +156,8 @@ class Main extends App
 	
 	override function update(dt:Float):Void
 	{
+		return; // TEST
+		
 		// key ----------------------------------
 		
 		var incRot:Float = 10 * Math.PI / 180;
