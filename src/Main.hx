@@ -10,6 +10,7 @@ import h2d.Bitmap;
 import h2d.Graphics;
 import h2d.Layers;
 import h2d.Tile;
+import h2d.TileGroup;
 import hxd.App;
 import hxd.Key;
 import hxd.Res;
@@ -30,14 +31,16 @@ class Main extends App
 {
 	static public var instance:Main;
 	
+	var sheet:Tile;
+	
 	var layer_world:Layers;
 	
 	var listEntities:Array<Entity> = [];
 	var listSolid:Array<Solid> = [];
 	
-	var ent_hero:Hero;
-	var ent_planet:Planet;
-	var ent_planet2:Planet;
+	var hero:Hero;
+	//var ent_planet:Planet;
+	//var ent_planet2:Planet;
 	
 	var img_bg:Bitmap;
 	var img_path:Graphics;
@@ -58,94 +61,73 @@ class Main extends App
 	
 	override function init():Void
 	{
+		// spritesheet --------------------------
+		
+		sheet = Res.spritesheet.toTile();
+		
 		// data ---------------------------------
 		
 		Data.load(hxd.Res.db.entry.getText());
 		
-		var level = Data.levels.all[0];
+		// background ---------------------------
 		
-		//var entities = Data.entities;
-		//var level:Data.Levels;
-		//var level:Data.Levels = Data.levels.all[0];
-		
-		//trace(Type.getClassName(Type.getClass(Data.levels.get(level_1))));
-		trace(level);
-		trace(Type.getClass(level));
-		trace(Type.getClassName(Type.getClass(level)));
-		
-		//trace(Data.entities);
-		//trace(Data.levels);
-		//trace(Data.levels.get(level_1));
+		img_bg = new Bitmap(Tile.fromColor(0x000000, s2d.width, s2d.height), s2d);
 		
 		// layers -------------------------------
 		
 		layer_world = new Layers(s2d);
 		
-		// background ---------------------------
+		// path ---------------------------------
 		
-		img_bg = new Bitmap(Tile.fromColor(0x000000, s2d.width, s2d.height), layer_world);
-		
-		// planet -------------------------------
-		
-		/*ent_planet = new Planet
-		(
-			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			500, 500
-		);
-		
-		ent_planet.crop(0, 0);
-		ent_planet.resize(200, 200);
-		ent_planet.center();
-		ent_planet.mass = 2;
-		ent_planet.solidRadius = 80;
-		
-		ent_planet2 = new Planet
-		(
-			new Bitmap(Res.spritesheet.toTile(), layer_world),
-			700, 150
-		);
-		
-		ent_planet2.crop(0, 0);
-		ent_planet2.resize(200, 200);
-		ent_planet2.center();
-		ent_planet2.mass = 2;
-		ent_planet2.solidRadius = 80;*/
+		img_path = new Graphics(layer_world);
 		
 		// hero ---------------------------------
 		
-		ent_hero = new Hero
-		(
-			new Bitmap(Tile.fromColor(0xFFFFFF, 32, 32), s2d),
-			s2d.width >> 1, s2d.width >> 1
-		);
+		hero = new Hero(s2d.width >> 1, s2d.height >> 1, layer_world);
+		hero.mass = 10;
+		hero.velocity = new Vector2D(2, 0);
 		
-		ent_hero.layerWorld = layer_world;
-		ent_hero.center();
-		ent_hero.mass = 10;
+		hero.animate([getTile(0, 0, 64, 64), getTile(64, 0, 64, 64)], 2);
 		
-		ent_hero.velocity = new Vector2D(15, -6); // TEST
+		listSolid.push(hero);
 		
-		// entities -----------------------------
+		// test ---------------------------------
 		
-		//listEntities.push(ent_hero);
-		//listEntities.push(ent_planet);
-		//listEntities.push(ent_planet2);
+		initLevel(0);
+	}
+	
+	public function initLevel(num:Int):Void
+	{
+		var level = Data.levels.all[num];
+		var levelEntities = level.listLayers;
 		
-		//listSolid.push(ent_planet);
-		//listSolid.push(ent_planet2);
+		// NOTE : TileGroup
 		
-		// path ---------------------------------
-		
-		img_path = new Graphics(s2d);
-		
-		layer_world.add(img_path, 0);
+		for (lvlEnt in levelEntities)
+		{
+			var x:Int = lvlEnt.x;
+			var y:Int = lvlEnt.y;
+			var ref = Data.entities.get(lvlEnt.ref.id);
+			var tile = ref.tile;
+			
+			var s:Int = 32;
+			var t:Tile = getTile(tile.x * s, tile.y * s, tile.width * s, tile.height * s);
+			
+			var ent:Solid = new Solid(x * s, y * s, layer_world);
+			ent.mass = 2;
+			ent.solidRadius = 2;
+			
+			ent.animate([t], 0);
+			
+			listSolid.push(ent);
+		}
 	}
 	
 	// FACTORIES //////////////////////////////////////////////////////////////////////////////////
 	
-	public function createEntity():Solid
+	public function getTile(x:Int, y:Int, w:Int, h:Int):Tile
 	{
-		return null;
+		return sheet.sub(x, y, w, h, -w >> 1, -h >> 1);
 	}
 	
 	// UPDATE /////////////////////////////////////////////////////////////////////////////////////
@@ -156,8 +138,6 @@ class Main extends App
 	
 	override function update(dt:Float):Void
 	{
-		return; // TEST
-		
 		// key ----------------------------------
 		
 		var incRot:Float = 10 * Math.PI / 180;
@@ -166,16 +146,16 @@ class Main extends App
 		// rotation
 		
 		if (Key.isPressed(Key.RIGHT))
-			ent_hero.velocity.rotate(incRot);
+			hero.velocity.rotate(incRot);
 		else if (Key.isPressed(Key.LEFT))
-			ent_hero.velocity.rotate( -incRot);
+			hero.velocity.rotate( -incRot);
 		
 		// speed
 		
 		if (Key.isPressed(Key.UP))
-			ent_hero.velocity.multiply(1 + incSpeed);
+			hero.velocity.multiply(1 + incSpeed);
 		else if (Key.isPressed(Key.DOWN))
-			ent_hero.velocity.multiply(1 - incSpeed);
+			hero.velocity.multiply(1 - incSpeed);
 		
 		// position -----------------------------
 		
@@ -185,9 +165,9 @@ class Main extends App
 			
 			// move -----------------------------
 			
-			var heroX:Float = ent_hero.worldX;
-			var heroY:Float = ent_hero.worldY;
-			var heroVel:Vector2D = ent_hero.velocity;
+			var heroX:Float = hero.x;
+			var heroY:Float = hero.y;
+			var heroVel:Vector2D = hero.velocity;
 			
 			nextStep = getNextPosition(heroX, heroY, heroVel);
 			
@@ -198,7 +178,7 @@ class Main extends App
 				layer_world.x -= nextStep.velocity.x;
 				layer_world.y -= nextStep.velocity.y;
 				
-				ent_hero.velocity = nextStep.velocity;
+				hero.velocity = nextStep.velocity;
 				
 				// path -----------------------------
 				
@@ -208,7 +188,7 @@ class Main extends App
 				
 				var nextX:Float = heroX;
 				var nextY:Float = heroY;
-				var nextVel:Vector2D = ent_hero.velocity.clone();
+				var nextVel:Vector2D = hero.velocity.clone();
 				var oldX:Float = nextX;
 				var oldY:Float = nextY;
 				
@@ -246,7 +226,12 @@ class Main extends App
 			}
 		}
 		
-		// --------------------------------------
+		// update -------------------------------
+		
+		for (ent in listSolid)
+			ent.update(dt);
+		
+		// TEST ---------------------------------
 		
 		firstInc++;
 		
@@ -258,7 +243,7 @@ class Main extends App
 	{
 		var pos:Vector2D = new Vector2D(currentX, currentY);
 		var vel:Vector2D = currentVel.clone();
-		var m:Float = ent_hero.mass;
+		var m:Float = hero.mass;
 		var K:Float = 500;
 		var capEnt:Float = 5;
 		var capMove:Float = 5;
@@ -268,30 +253,33 @@ class Main extends App
 		
 		for (ent in listSolid)
 		{
-			var entX:Float = ent.x;
-			var entY:Float = ent.y;
-			var M:Float = ent.mass;
-			
-			var toCenter:Vector2D = new Vector2D(entX, entY);
-			toCenter.minus(pos);
-			
-			var centerMagnitude:Float = toCenter.magnitude();
-			var centerDirection:Float = toCenter.angle();
-			
-			var magnitude:Float = (K * m * M) / (centerMagnitude * centerMagnitude); // F = K * m * M / r²
-			
-			var forceX:Float = magnitude * Math.cos(centerDirection);
-			var forceY:Float = magnitude * Math.sin(centerDirection);
-			
-			var acc:Vector2D = new Vector2D(forceX, forceY); // a = F/m
-			acc.multiply(1 / m);
-			
-			devVel.add(acc);
-			
-			if (centerMagnitude <= ent.solidRadius)
+			if (ent != hero)
 			{
-				posHit = toCenter.normalize().multiply(ent.solidRadius / centerMagnitude);
-				break;
+				var entX:Float = ent.x;
+				var entY:Float = ent.y;
+				var M:Float = ent.mass;
+				
+				var toCenter:Vector2D = new Vector2D(entX, entY);
+				toCenter.minus(pos);
+				
+				var centerMagnitude:Float = toCenter.magnitude();
+				var centerDirection:Float = toCenter.angle();
+				
+				var magnitude:Float = centerMagnitude > 0 ? (K * m * M) / (centerMagnitude * centerMagnitude) : 0; // F = K * m * M / r²
+				
+				var forceX:Float = magnitude * Math.cos(centerDirection);
+				var forceY:Float = magnitude * Math.sin(centerDirection);
+				
+				var acc:Vector2D = new Vector2D(forceX, forceY); // a = F/m
+				acc.multiply(1 / m); // NOTE : attention aux masses de 0 : 1/0 = NaN
+				
+				devVel.add(acc);
+				
+				if (centerMagnitude <= ent.solidRadius)
+				{
+					posHit = toCenter.normalize().multiply(ent.solidRadius / centerMagnitude);
+					break;
+				}
 			}
 		}
 		

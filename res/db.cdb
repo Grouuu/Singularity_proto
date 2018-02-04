@@ -55,19 +55,19 @@
 					"x": 300,
 					"y": 300,
 					"size": 250,
-					"mass": 5,
-					"radiusSolid": 250,
+					"mass": 2,
+					"radiusSolid": 120,
 					"radiusGas": 350,
 					"velocityAngular": 0.1,
 					"velocityY": 0,
 					"velocityX": 0,
 					"tile": {
 						"file": "spritesheet.png",
-						"size": 64,
-						"x": 2,
+						"size": 32,
+						"x": 4,
 						"y": 0,
-						"width": 4,
-						"height": 4
+						"width": 8,
+						"height": 8
 					}
 				}
 			],
@@ -94,56 +94,48 @@
 					"typeStr": "16"
 				},
 				{
-					"typeStr": "8",
-					"name": "entities"
-				},
-				{
 					"name": "tileProps",
 					"typeStr": "8"
 				},
 				{
-					"name": "layers",
-					"typeStr": "8"
+					"typeStr": "8",
+					"name": "listLayers",
+					"display": null
 				}
 			],
 			"lines": [
 				{
 					"id": "level_1",
-					"width": 200,
-					"height": 50,
-					"entities": [
+					"width": 50,
+					"height": 25,
+					"tileProps": [],
+					"listLayers": [
 						{
-							"x": 42,
-							"y": 18,
-							"kind": "planet_1",
-							"id": "planet_1"
+							"x": 21,
+							"y": 3,
+							"ref": "planet_1"
 						},
 						{
-							"x": 60,
-							"y": 34,
-							"kind": "planet_1",
-							"id": "planet_2"
+							"x": 35,
+							"y": 7,
+							"ref": "planet_1"
 						},
 						{
-							"x": 15,
-							"y": 38,
-							"kind": "planet_1",
-							"id": "planet_3"
+							"x": 14,
+							"y": 14,
+							"ref": "planet_1"
 						},
 						{
-							"x": 104,
-							"y": 39,
-							"kind": "planet_1",
-							"id": "planet_4"
+							"x": 25,
+							"y": 19,
+							"ref": "planet_1"
 						}
 					],
-					"tileProps": [],
-					"layers": [],
 					"props": {
-						"tileSize": 16,
+						"tileSize": 32,
 						"layers": [
 							{
-								"l": "entities",
+								"l": "listLayers",
 								"p": {
 									"alpha": 1
 								}
@@ -175,27 +167,13 @@
 			"columns": []
 		},
 		{
-			"name": "levels@layers",
-			"props": {
-				"hide": true
-			},
-			"separators": [],
-			"lines": [],
-			"columns": []
-		},
-		{
-			"name": "levels@entities",
+			"name": "levels@listLayers",
 			"props": {
 				"hide": true
 			},
 			"separators": [],
 			"lines": [],
 			"columns": [
-				{
-					"typeStr": "0",
-					"name": "id",
-					"display": null
-				},
 				{
 					"typeStr": "3",
 					"name": "x"
@@ -206,7 +184,7 @@
 				},
 				{
 					"typeStr": "6:entities",
-					"name": "kind",
+					"name": "ref",
 					"display": null
 				}
 			]
