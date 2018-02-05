@@ -10,14 +10,6 @@
 				},
 				{
 					"typeStr": "3",
-					"name": "x"
-				},
-				{
-					"typeStr": "3",
-					"name": "y"
-				},
-				{
-					"typeStr": "3",
 					"name": "size"
 				},
 				{
@@ -52,23 +44,31 @@
 			"lines": [
 				{
 					"id": "planet_1",
-					"x": 300,
-					"y": 300,
 					"size": 250,
 					"mass": 2,
-					"radiusSolid": 120,
+					"radiusSolid": 125,
 					"radiusGas": 350,
 					"velocityAngular": 0.1,
 					"velocityY": 0,
 					"velocityX": 0,
 					"tile": {
 						"file": "spritesheet.png",
-						"size": 32,
-						"x": 4,
+						"size": 64,
+						"x": 2,
 						"y": 0,
-						"width": 8,
-						"height": 8
+						"width": 4,
+						"height": 4
 					}
+				},
+				{
+					"id": "hero",
+					"size": 0,
+					"mass": 0,
+					"radiusSolid": 0,
+					"radiusGas": 0,
+					"velocityX": 0,
+					"velocityY": 0,
+					"velocityAngular": 0
 				}
 			],
 			"separators": [],
@@ -99,8 +99,7 @@
 				},
 				{
 					"typeStr": "8",
-					"name": "listLayers",
-					"display": null
+					"name": "layerSolid"
 				}
 			],
 			"lines": [
@@ -109,39 +108,44 @@
 					"width": 50,
 					"height": 25,
 					"tileProps": [],
-					"listLayers": [
-						{
-							"x": 21,
-							"y": 3,
-							"ref": "planet_1"
-						},
-						{
-							"x": 35,
-							"y": 7,
-							"ref": "planet_1"
-						},
-						{
-							"x": 14,
-							"y": 14,
-							"ref": "planet_1"
-						},
-						{
-							"x": 25,
-							"y": 19,
-							"ref": "planet_1"
-						}
-					],
 					"props": {
-						"tileSize": 32,
+						"tileSize": 64,
 						"layers": [
 							{
-								"l": "listLayers",
+								"l": "layerSolid",
 								"p": {
 									"alpha": 1
 								}
 							}
 						]
-					}
+					},
+					"layerSolid": [
+						{
+							"x": 0,
+							"y": 0,
+							"ref": "planet_1"
+						},
+						{
+							"x": 20,
+							"y": 0,
+							"ref": "planet_1"
+						},
+						{
+							"x": 14,
+							"y": 2,
+							"ref": "planet_1"
+						},
+						{
+							"x": 21,
+							"y": 6,
+							"ref": "planet_1"
+						},
+						{
+							"x": 8,
+							"y": 10,
+							"ref": "planet_1"
+						}
+					]
 				}
 			],
 			"separators": [],
@@ -167,7 +171,7 @@
 			"columns": []
 		},
 		{
-			"name": "levels@listLayers",
+			"name": "levels@layerSolid",
 			"props": {
 				"hide": true
 			},

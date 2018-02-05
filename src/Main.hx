@@ -31,6 +31,8 @@ class Main extends App
 {
 	static public var instance:Main;
 	
+	static private inline var TILE_SIZE:Int = 64;
+	
 	var sheet:Tile;
 	
 	var layer_world:Layers;
@@ -39,14 +41,30 @@ class Main extends App
 	var listSolid:Array<Solid> = [];
 	
 	var hero:Hero;
-	//var ent_planet:Planet;
-	//var ent_planet2:Planet;
 	
 	var img_bg:Bitmap;
 	var img_path:Graphics;
 	
 	var firstInc:Int = 0; // TEST
 	var isFirst = true; // TEST
+	
+	/*
+	 * TODO :
+	 * • passer le héros au dessus des entities solides
+	 * • mettre le héros dans liste entities
+	 * • mettre en base une liste de tile au lieu d'une seule (pour anim)
+	 * • dans db.entities, mettre toutes les animation du héros
+	 * • tester avec trou noir
+	 * • gérer les couches gazeuses
+	 * • gérer les props du héros (vie, oxygène, ...)
+	 * • afficher et update les props du héros
+	 * • afficher des étoiles dans le bg (+ parallaxe)
+	 * • améliorer les inputs (rotation + acc/decélération)
+	 * • anim rotation du héros
+	 * • anim acc/décélération
+	 * • trouver nuancier de couleur
+	 * • tester si champ d'astéroides (beaucoup de test gravité/hit etc.) est trop lourd ou non
+	*/
 	
 	// INIT ///////////////////////////////////////////////////////////////////////////////////////
 	
@@ -87,7 +105,7 @@ class Main extends App
 		hero.mass = 10;
 		hero.velocity = new Vector2D(2, 0);
 		
-		hero.animate([getTile(0, 0, 64, 64), getTile(64, 0, 64, 64)], 2);
+		hero.animate([getTile(0, 0, 1, 1), getTile(1, 0, 1, 1)], 2);
 		
 		listSolid.push(hero);
 		
@@ -99,7 +117,7 @@ class Main extends App
 	public function initLevel(num:Int):Void
 	{
 		var level = Data.levels.all[num];
-		var levelEntities = level.listLayers;
+		var levelEntities = level.layerSolid;
 		
 		// NOTE : TileGroup
 		
@@ -108,14 +126,16 @@ class Main extends App
 			var x:Int = lvlEnt.x;
 			var y:Int = lvlEnt.y;
 			var ref = Data.entities.get(lvlEnt.ref.id);
-			var tile = ref.tile;
+			var tileData = ref.tile;
 			
-			var s:Int = 32;
-			var t:Tile = getTile(tile.x * s, tile.y * s, tile.width * s, tile.height * s);
+			var t:Tile = getTile(tileData.x, tileData.y, tileData.width, tileData.height);
 			
-			var ent:Solid = new Solid(x * s, y * s, layer_world);
-			ent.mass = 2;
-			ent.solidRadius = 2;
+			var ent:Solid = new Solid(x * TILE_SIZE, y * TILE_SIZE, layer_world);
+			ent.mass = ref.mass;
+			ent.radiusSolid = ref.radiusSolid;
+			ent.radiusGas = ref.radiusGas;
+			
+			// TODO : ajouter velocity/size/rotation/... (et comment les customs depuis level pour override les props des entities)
 			
 			ent.animate([t], 0);
 			
@@ -127,7 +147,7 @@ class Main extends App
 	
 	public function getTile(x:Int, y:Int, w:Int, h:Int):Tile
 	{
-		return sheet.sub(x, y, w, h, -w >> 1, -h >> 1);
+		return sheet.sub(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, -(w * TILE_SIZE) >> 1, -(h * TILE_SIZE) >> 1);
 	}
 	
 	// UPDATE /////////////////////////////////////////////////////////////////////////////////////
@@ -253,7 +273,7 @@ class Main extends App
 		
 		for (ent in listSolid)
 		{
-			if (ent != hero)
+			if (ent != hero && ent.mass > 0) // mass == 0 : divided by 0 (error)
 			{
 				var entX:Float = ent.x;
 				var entY:Float = ent.y;
@@ -271,13 +291,13 @@ class Main extends App
 				var forceY:Float = magnitude * Math.sin(centerDirection);
 				
 				var acc:Vector2D = new Vector2D(forceX, forceY); // a = F/m
-				acc.multiply(1 / m); // NOTE : attention aux masses de 0 : 1/0 = NaN
+				acc.multiply(1 / m);
 				
 				devVel.add(acc);
 				
-				if (centerMagnitude <= ent.solidRadius)
+				if (centerMagnitude <= ent.radiusSolid)
 				{
-					posHit = toCenter.normalize().multiply(ent.solidRadius / centerMagnitude);
+					posHit = toCenter.normalize().multiply(ent.radiusSolid / centerMagnitude);
 					break;
 				}
 			}
@@ -285,10 +305,9 @@ class Main extends App
 		
 		vel.add(devVel);
 		
-		// TODO : j'ai trop besoin de cap les magnitude, je trouve ça pas normal
-		// voir pourquoi l'accélération est si importante
+		// TODO : sans cap, le déplacement augmente bc trop (normal ?)
 		
-		while (vel.magnitude() > capMove)
+		if (vel.magnitude() > capMove)
 			vel = vel.normalize().multiply(capMove);
 		
 		pos.add(vel);
