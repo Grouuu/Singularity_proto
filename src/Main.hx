@@ -150,6 +150,47 @@ class Main extends App
 		return sheet.sub(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, -(w * TILE_SIZE) >> 1, -(h * TILE_SIZE) >> 1);
 	}
 	
+	// LIGHT FIELD ////////////////////////////////////////////////////////////////////////////////
+	
+	/*
+	 * TODO
+	 * • tracer une ligne du centre de la source vers l'entité
+	 * • calculer la perpendiculaire, de longueur solidRadius
+	 * • tracer le quadrilatère qui est formé de deux extrémités de l'entité et le bord du level
+	 * • remplir ces quadrilatère avec la couleur "ombre"
+	 * • calculer une fois les ombres pour les entités statiques
+	 * • calculer à chaque frame les ombres pour les entités mobiles
+	 * • ajouter les deux jeux d'ombres à la scène
+	 * • détecter quand le héros est hors des ombres
+	 * 		- en détectant si le héros est sur une ombre ou non (test hitbox, ou pixel) -> implique de pouvoir tester l'image des ombres
+	 * 		- en raycastant le héros depuis la source (permet un jeu de lumière en shader ?)
+	 * 
+	 * NOTE
+	 * • ne marche que pour des entités rondes
+	 * 
+	 * WARNING
+	 * • ne pas faire un bitmap unique géant, ça prendrais trop de RAM
+	*/
+	
+	// PointLight pour shader mais s3d alors ?
+	// class Atlas pour gérer les tiles ?
+	// class Sprite pour gérer mes groupes d'entités ? (Et TileGroup alors ?)
+	// SceneInspector avec castleDB pour changer des valeur en live ?
+	// h2d.comp = composants obsolète, utiliser castle plutôt
+	
+	// https://haxe.org/blog/nicolas-about-haxe-episode-2/
+	// http://old.haxe.org/manual/hxsl
+	// http://ncannasse.fr/blog/announcing_hxsl
+	// http://ncase.me/sight-and-light/
+	// https://github.com/ncase/sight-and-light/blob/gh-pages/draft6.html
+	// http://www.catalinzima.com/2010/07/my-technique-for-the-shader-based-dynamic-2d-shadows/
+	// https://github.com/mattdesl/lwjgl-basics/wiki/2D-Pixel-Perfect-Shadows
+	
+	public function updateLight():Void
+	{
+		
+	}
+	
 	// UPDATE /////////////////////////////////////////////////////////////////////////////////////
 	
 	var rotKeyDown:Int = 0;
