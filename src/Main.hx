@@ -11,6 +11,12 @@ import h2d.Graphics;
 import h2d.Layers;
 import h2d.Tile;
 import h2d.TileGroup;
+import h3d.mat.Material;
+import h3d.mat.Texture;
+import h3d.prim.Sphere;
+import h3d.scene.Mesh;
+import h3d.scene.World;
+import h3d.Vector;
 import hxd.App;
 import hxd.Key;
 import hxd.Res;
@@ -20,18 +26,18 @@ import hxd.Res;
  * @author Grouuu
  */
 
-typedef NextStep =
+/*typedef NextStep =
 {
 	var position:Vector2D;
 	var velocity:Vector2D;
 	var positionHit:Vector2D;
-}
+}*/
 
 class Main extends App
 {
 	static public var instance:Main;
 	
-	static private inline var TILE_SIZE:Int = 64;
+	/*static private inline var TILE_SIZE:Int = 64;
 	
 	var sheet:Tile;
 	
@@ -46,7 +52,7 @@ class Main extends App
 	var img_path:Graphics;
 	
 	var firstInc:Int = 0; // TEST
-	var isFirst = true; // TEST
+	var isFirst = true; // TEST*/
 	
 	/*
 	 * TODO :
@@ -68,16 +74,42 @@ class Main extends App
 	
 	// INIT ///////////////////////////////////////////////////////////////////////////////////////
 	
+	var world:World;
+	
 	static function main()
 	{
-		#if js
-			Res.initEmbed( { compressSounds: true } );
-		#end
+		Res.initEmbed();
 		
 		instance = new Main();
 	}
 	
-	override function init():Void
+	override function init() 
+	{
+		//world = new World(64, 128, s3d);
+		
+		var model:Sphere = new Sphere(1, 20, 20);
+		
+		//model.translate(-0.5, -0.5, -0.5);
+		model.unindex();
+		model.addNormals();
+		model.addUVs();
+		
+		var texPlanet:Texture = Res.textureTes.toTexture();
+		var mat:Material = new Material(texPlanet);
+		
+		//var planet:Mesh = new Mesh(model, mat, s3d);
+		var planet:Mesh = new Mesh(model, new h3d.mat.Material(), s3d);
+		
+		//var light = new h3d.scene.DirLight(new Vector(0.5, 0.5, -0.5), s3d);
+		//light.enableSpecular = true;
+		
+		// set the ambient light to 30%
+		//s3d.lightSystem.ambientLight.set(0.3, 0.3, 0.3);
+		
+		//planet.material.mainPass.enableLights = true;
+	}
+	
+	/*override function init():Void
 	{
 		// spritesheet --------------------------
 		
@@ -141,14 +173,14 @@ class Main extends App
 			
 			listSolid.push(ent);
 		}
-	}
+	}*/
 	
 	// FACTORIES //////////////////////////////////////////////////////////////////////////////////
 	
-	public function getTile(x:Int, y:Int, w:Int, h:Int):Tile
+	/*public function getTile(x:Int, y:Int, w:Int, h:Int):Tile
 	{
 		return sheet.sub(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, -(w * TILE_SIZE) >> 1, -(h * TILE_SIZE) >> 1);
-	}
+	}*/
 	
 	// LIGHT FIELD ////////////////////////////////////////////////////////////////////////////////
 	
@@ -186,14 +218,9 @@ class Main extends App
 	// http://www.catalinzima.com/2010/07/my-technique-for-the-shader-based-dynamic-2d-shadows/
 	// https://github.com/mattdesl/lwjgl-basics/wiki/2D-Pixel-Perfect-Shadows
 	
-	public function updateLight():Void
-	{
-		
-	}
-	
 	// UPDATE /////////////////////////////////////////////////////////////////////////////////////
 	
-	var rotKeyDown:Int = 0;
+	/*var rotKeyDown:Int = 0;
 	var movKeyDown:Int = 0;
 	var isCrashed:Bool = false;
 	
@@ -354,5 +381,5 @@ class Main extends App
 		pos.add(vel);
 		
 		return { position: pos, velocity: vel, positionHit: posHit };
-	}
+	}*/
 }
