@@ -1,22 +1,14 @@
 package ;
 
 import com.grouuu.Data;
-import com.grouuu.entities.Hero;
-import com.grouuu.entities.Planet;
-import com.grouuu.entities.Entity;
 import com.grouuu.Vector2D;
+import com.grouuu.entities.Entity;
+import com.grouuu.entities.Hero;
 import com.grouuu.entities.Solid;
 import h2d.Bitmap;
 import h2d.Graphics;
 import h2d.Layers;
 import h2d.Tile;
-import h2d.TileGroup;
-import h3d.mat.Material;
-import h3d.mat.Texture;
-import h3d.prim.Sphere;
-import h3d.scene.Mesh;
-import h3d.scene.World;
-import h3d.Vector;
 import hxd.App;
 import hxd.Key;
 import hxd.Res;
@@ -26,18 +18,18 @@ import hxd.Res;
  * @author Grouuu
  */
 
-/*typedef NextStep =
+typedef NextStep =
 {
 	var position:Vector2D;
 	var velocity:Vector2D;
 	var positionHit:Vector2D;
-}*/
+}
 
 class Main extends App
 {
 	static public var instance:Main;
 	
-	/*static private inline var TILE_SIZE:Int = 64;
+	static private inline var TILE_SIZE:Int = 64;
 	
 	var sheet:Tile;
 	
@@ -52,7 +44,10 @@ class Main extends App
 	var img_path:Graphics;
 	
 	var firstInc:Int = 0; // TEST
-	var isFirst = true; // TEST*/
+	var isFirst = true; // TEST
+	
+	// https://github.com/HeapsIO/heaps
+	// https://gitter.im/heapsio/Lobby
 	
 	/*
 	 * TODO :
@@ -72,9 +67,14 @@ class Main extends App
 	 * • tester si champ d'astéroides (beaucoup de test gravité/hit etc.) est trop lourd ou non
 	*/
 	
-	// INIT ///////////////////////////////////////////////////////////////////////////////////////
+	// PointLight pour shader mais s3d alors ?
+	// class Atlas pour gérer les tiles ?
+	// class Sprite pour gérer mes groupes d'entités ? (Et TileGroup alors ?)
+	// SceneInspector avec castleDB pour changer des valeur en live ?
+	// h2d.comp = composants obsolète, utiliser castle plutôt
+	// h2d.Flow
 	
-	var world:World;
+	// INIT ///////////////////////////////////////////////////////////////////////////////////////
 	
 	static function main()
 	{
@@ -83,33 +83,7 @@ class Main extends App
 		instance = new Main();
 	}
 	
-	override function init() 
-	{
-		//world = new World(64, 128, s3d);
-		
-		var model:Sphere = new Sphere(1, 20, 20);
-		
-		//model.translate(-0.5, -0.5, -0.5);
-		model.unindex();
-		model.addNormals();
-		model.addUVs();
-		
-		var texPlanet:Texture = Res.textureTes.toTexture();
-		var mat:Material = new Material(texPlanet);
-		
-		//var planet:Mesh = new Mesh(model, mat, s3d);
-		var planet:Mesh = new Mesh(model, new h3d.mat.Material(), s3d);
-		
-		//var light = new h3d.scene.DirLight(new Vector(0.5, 0.5, -0.5), s3d);
-		//light.enableSpecular = true;
-		
-		// set the ambient light to 30%
-		//s3d.lightSystem.ambientLight.set(0.3, 0.3, 0.3);
-		
-		//planet.material.mainPass.enableLights = true;
-	}
-	
-	/*override function init():Void
+	override function init():Void
 	{
 		// spritesheet --------------------------
 		
@@ -173,16 +147,21 @@ class Main extends App
 			
 			listSolid.push(ent);
 		}
-	}*/
+	}
 	
 	// FACTORIES //////////////////////////////////////////////////////////////////////////////////
 	
-	/*public function getTile(x:Int, y:Int, w:Int, h:Int):Tile
+	public function getTile(x:Int, y:Int, w:Int, h:Int):Tile
 	{
 		return sheet.sub(x * TILE_SIZE, y * TILE_SIZE, w * TILE_SIZE, h * TILE_SIZE, -(w * TILE_SIZE) >> 1, -(h * TILE_SIZE) >> 1);
-	}*/
+	}
 	
 	// LIGHT FIELD ////////////////////////////////////////////////////////////////////////////////
+	
+	public function updateLight():Void
+	{
+		
+	}
 	
 	/*
 	 * TODO
@@ -204,12 +183,6 @@ class Main extends App
 	 * • ne pas faire un bitmap unique géant, ça prendrais trop de RAM
 	*/
 	
-	// PointLight pour shader mais s3d alors ?
-	// class Atlas pour gérer les tiles ?
-	// class Sprite pour gérer mes groupes d'entités ? (Et TileGroup alors ?)
-	// SceneInspector avec castleDB pour changer des valeur en live ?
-	// h2d.comp = composants obsolète, utiliser castle plutôt
-	
 	// https://haxe.org/blog/nicolas-about-haxe-episode-2/
 	// http://old.haxe.org/manual/hxsl
 	// http://ncannasse.fr/blog/announcing_hxsl
@@ -220,7 +193,7 @@ class Main extends App
 	
 	// UPDATE /////////////////////////////////////////////////////////////////////////////////////
 	
-	/*var rotKeyDown:Int = 0;
+	var rotKeyDown:Int = 0;
 	var movKeyDown:Int = 0;
 	var isCrashed:Bool = false;
 	
@@ -381,5 +354,5 @@ class Main extends App
 		pos.add(vel);
 		
 		return { position: pos, velocity: vel, positionHit: posHit };
-	}*/
+	}
 }
