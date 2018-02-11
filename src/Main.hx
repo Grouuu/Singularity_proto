@@ -25,6 +25,14 @@ typedef NextStep =
 	var positionHit:Vector2D;
 }
 
+typedef Star =
+{
+	var x:Int;
+	var y:Int;
+	var radius:Int;
+	var power:Int;
+}
+
 class Main extends App
 {
 	static public var instance:Main;
@@ -39,9 +47,11 @@ class Main extends App
 	var listSolid:Array<Solid> = [];
 	
 	var hero:Hero;
+	var star:Star;
 	
 	var img_bg:Bitmap;
 	var img_path:Graphics;
+	var img_light:Graphics;
 	
 	var firstInc:Int = 0; // TEST
 	var isFirst = true; // TEST
@@ -95,7 +105,13 @@ class Main extends App
 		
 		// background ---------------------------
 		
-		img_bg = new Bitmap(Tile.fromColor(0x000000, s2d.width, s2d.height), s2d);
+		img_bg = new Bitmap(Tile.fromColor(0x1A1A2E, s2d.width, s2d.height), s2d);
+		
+		// light --------------------------------
+		
+		/*img_light = new Graphics(s2d);
+		img_light.x = -256;
+		img_light.y = -256;*/
 		
 		// layers -------------------------------
 		
@@ -109,7 +125,7 @@ class Main extends App
 		
 		hero = new Hero(s2d.width >> 1, s2d.height >> 1, layer_world);
 		hero.mass = 10;
-		hero.velocity = new Vector2D(2, 0);
+		hero.velocity = new Vector2D(0, 0);
 		
 		hero.animate([getTile(0, 0, 1, 1), getTile(1, 0, 1, 1)], 2);
 		
@@ -117,11 +133,17 @@ class Main extends App
 		
 		// test ---------------------------------
 		
+		img_light = new Graphics(s2d);
+		img_light.x = -256;
+		img_light.y = -256;
+		
 		initLevel(0);
 	}
 	
 	public function initLevel(num:Int):Void
 	{
+		star = { x: 1000, y: - 1000, radius: 300, power: 10 };
+		
 		var level = Data.levels.all[num];
 		var levelEntities = level.layerSolid;
 		
@@ -160,7 +182,52 @@ class Main extends App
 	
 	public function updateLight():Void
 	{
+		img_light.clear();
 		
+		var color:UInt = 0x000033;
+		
+		//img_light.beginFill(color);
+		
+		// TODO
+		// calculer le point d'intersection des deux tangentes
+		// si il est dans le screen, faire un triangle
+		// sinon, dessiner un quadrilatère (si les deux tangentes touchent le même bord, ou un pentagone (si elles touchent deux bords différents - avec un coin)
+		
+		for (ent in listSolid)
+		{
+			if (ent != hero && ent.x > -256 && ent.x < s2d.width + 256 && ent.y > -256 && ent.y < s2d.height + 256)
+			{
+				var entX:Float = ent.x;
+				var entY:Float = ent.y;
+				var radius:Int = ent.radiusSolid;
+				
+				var angle:Float = Math.atan2(entY - star.y, entX - star.x);
+				
+				// point2.x + Math.cos(ang - Math.PI / 2) * radius2
+				// point2.y + Math.sin(ang - Math.PI/2)* radius2
+				
+				var posX:Float = entX + Math.cos(angle + Math.PI / 2) * radius + 256;
+				var posY:Float = entY + Math.sin(angle + Math.PI / 2) * radius + 256;
+				
+				var originX:Float = posX;
+				var originY:Float = posY;
+				
+				img_light.lineStyle(5, 0xFF0000);
+				
+				img_light.moveTo(posX, posY);
+				
+				posX = entX + Math.cos(angle - Math.PI / 2) * radius + 256;
+				posY = entY + Math.sin(angle - Math.PI / 2) * radius + 256;
+				
+				img_light.lineTo(posX, posY);
+				
+				var intersecX:Float = 
+				
+				//var ang
+			}
+		}
+		
+		img_light.endFill();
 	}
 	
 	/*
@@ -292,6 +359,8 @@ class Main extends App
 		for (ent in listSolid)
 			ent.update(dt);
 		
+		updateLight();
+		
 		// TEST ---------------------------------
 		
 		firstInc++;
@@ -344,7 +413,7 @@ class Main extends App
 			}
 		}
 		
-		vel.add(devVel);
+		//vel.add(devVel); // TEST : désactivé pour test
 		
 		// TODO : sans cap, le déplacement augmente bc trop (normal ?)
 		

@@ -8,6 +8,6 @@ import com.grouuu.entities.Entity;
 class Solid extends Entity
 {
 	public var mass:Float = 0.0;
-	public var radiusSolid:Float = 0.0;
-	public var radiusGas:Float = 0.0;
+	public var radiusSolid:Int = 0;
+	public var radiusGas:Int = 0;
 }
