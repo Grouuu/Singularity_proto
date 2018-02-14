@@ -42,6 +42,8 @@ class Entity
 			anim.remove(); // TODO : trash for GC
 		
 		anim = new Anim(tiles, speed, parent);
+		
+		anim.visible = false; // TEST
 	}
 	
 	// TRANSFORM //////////////////////////////////////////////////////////////////////////////////

@@ -180,6 +180,9 @@ class Main extends App
 	
 	// LIGHT FIELD ////////////////////////////////////////////////////////////////////////////////
 	
+	// https://www.redblobgames.com/articles/visibility/
+	// http://deepnight.net/bresenham-magic-raycasting-line-of-sight-pathfinding/
+	
 	public function updateLight():Void
 	{
 		img_light.clear();
@@ -203,9 +206,6 @@ class Main extends App
 				
 				var angle:Float = Math.atan2(entY - star.y, entX - star.x);
 				
-				// point2.x + Math.cos(ang - Math.PI / 2) * radius2
-				// point2.y + Math.sin(ang - Math.PI/2)* radius2
-				
 				var posX:Float = entX + Math.cos(angle + Math.PI / 2) * radius + 256;
 				var posY:Float = entY + Math.sin(angle + Math.PI / 2) * radius + 256;
 				
@@ -221,7 +221,9 @@ class Main extends App
 				
 				img_light.lineTo(posX, posY);
 				
-				var intersecX:Float = 
+				// tester si l'ombre se rétrécie ou non (si non, ne pas s'emmerder)
+				
+				//var intersecX:Float = 
 				
 				//var ang
 			}
