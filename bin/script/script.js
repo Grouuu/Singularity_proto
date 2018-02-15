@@ -259,6 +259,7 @@ var Main = function() {
 	this.isCrashed = false;
 	this.isFirst = true;
 	this.firstInc = 0;
+	this.marginLight = 256;
 	this.listSolid = [];
 	hxd_App.call(this);
 };
@@ -284,10 +285,10 @@ Main.prototype = $extend(hxd_App.prototype,{
 		this.img_light = new h2d_Graphics(this.s2d);
 		var _this = this.img_light;
 		_this.posChanged = true;
-		_this.x = -256;
+		_this.x = -this.marginLight;
 		var _this1 = this.img_light;
 		_this1.posChanged = true;
-		_this1.y = -256;
+		_this1.y = -this.marginLight;
 		this.initLevel(0);
 	}
 	,initLevel: function(num) {
@@ -324,26 +325,126 @@ Main.prototype = $extend(hxd_App.prototype,{
 		while(_g < _g1.length) {
 			var ent = _g1[_g];
 			++_g;
-			if(ent != this.hero && ent.x > -256 && ent.x < this.s2d.width + 256 && ent.y > -256 && ent.y < this.s2d.height + 256) {
+			if(ent != this.hero && ent.x > -this.marginLight && ent.x < this.s2d.width + this.marginLight && ent.y > -this.marginLight && ent.y < this.s2d.height + this.marginLight) {
 				var entX = ent.x;
 				var entY = ent.y;
 				var radius = ent.radiusSolid;
 				var angle = Math.atan2(entY - this.star.y,entX - this.star.x);
-				var posX = entX + Math.cos(angle + Math.PI / 2) * radius + 256;
-				var posY = entY + Math.sin(angle + Math.PI / 2) * radius + 256;
-				var originX = posX;
-				var originY = posY;
+				var posAX = entX + Math.cos(angle + Math.PI / 2) * radius + 256;
+				var posAY = entY + Math.sin(angle + Math.PI / 2) * radius + 256;
+				var posBX = entX + Math.cos(angle - Math.PI / 2) * radius + 256;
+				var posBY = entY + Math.sin(angle - Math.PI / 2) * radius + 256;
 				this.img_light.lineStyle(5,16711680);
 				var _this = this.img_light;
 				_this.flush();
-				_this.addVertex(posX,posY,_this.curR,_this.curG,_this.curB,_this.curA,posX * _this.ma + posY * _this.mc + _this.mx,posX * _this.mb + posY * _this.md + _this.my);
-				posX = entX + Math.cos(angle - Math.PI / 2) * radius + 256;
-				posY = entY + Math.sin(angle - Math.PI / 2) * radius + 256;
+				_this.addVertex(posAX,posAY,_this.curR,_this.curG,_this.curB,_this.curA,posAX * _this.ma + posAY * _this.mc + _this.mx,posAX * _this.mb + posAY * _this.md + _this.my);
 				var _this1 = this.img_light;
-				_this1.addVertex(posX,posY,_this1.curR,_this1.curG,_this1.curB,_this1.curA,posX * _this1.ma + posY * _this1.mc + _this1.mx,posX * _this1.mb + posY * _this1.md + _this1.my);
+				_this1.addVertex(posBX,posBY,_this1.curR,_this1.curG,_this1.curB,_this1.curA,posBX * _this1.ma + posBY * _this1.mc + _this1.mx,posBX * _this1.mb + posBY * _this1.md + _this1.my);
+				var bAX = -this.layer_world.x - this.marginLight;
+				var bAY = -this.layer_world.y - this.marginLight;
+				var bBX = -this.layer_world.x + this.s2d.width + this.marginLight;
+				var bBY = bAY;
+				var bCX = bBX;
+				var bCY = -this.layer_world.y + this.s2d.height + this.marginLight;
+				var bDX = bAX;
+				var bDY = bBX;
+				var iAB1 = this.intersecLines(this.star.x,this.star.y,posAX,posAY,bAX,bAY,bBX,bBY);
+				var iBC1 = this.intersecLines(this.star.x,this.star.y,posAX,posAY,bBX,bBY,bCX,bCY);
+				var iCD1 = this.intersecLines(this.star.x,this.star.y,posAX,posAY,bCX,bCY,bDX,bDY);
+				var iDA1 = this.intersecLines(this.star.x,this.star.y,posAX,posAY,bDX,bDY,bAX,bAY);
+				var iAB2 = this.intersecLines(this.star.x,this.star.y,posBX,posBY,bAX,bAY,bBX,bBY);
+				var iBC2 = this.intersecLines(this.star.x,this.star.y,posBX,posBY,bBX,bBY,bCX,bCY);
+				var iCD2 = this.intersecLines(this.star.x,this.star.y,posBX,posBY,bCX,bCY,bDX,bDY);
+				var iDA2 = this.intersecLines(this.star.x,this.star.y,posBX,posBY,bDX,bDY,bAX,bAY);
+				var b1 = "";
+				var b2 = "";
+				var dist1 = 999999;
+				var dist2 = 999999;
+				var inter1 = null;
+				var inter2 = null;
+				if(iAB1 != null && iAB1.dist < dist1) {
+					b1 = "AB";
+					inter1 = iAB1;
+				} else if(iBC1 != null && iBC1.dist < dist1) {
+					b1 = "BC";
+					inter1 = iBC1;
+				} else if(iCD1 != null && iCD1.dist < dist1) {
+					b1 = "CD";
+					inter1 = iCD1;
+				} else if(iDA1 != null && iDA1.dist < dist1) {
+					b1 = "DA";
+					inter1 = iDA1;
+				}
+				if(iAB2 != null && iAB2.dist < dist2) {
+					b2 = "AB";
+					inter2 = iAB2;
+				} else if(iBC2 != null && iBC2.dist < dist2) {
+					b2 = "BC";
+					inter2 = iBC2;
+				} else if(iCD2 != null && iCD2.dist < dist2) {
+					b2 = "CD";
+					inter2 = iCD2;
+				} else if(iDA2 != null && iDA2.dist < dist2) {
+					b2 = "DA";
+					inter2 = iDA2;
+				}
+				var posCX;
+				var posCY;
+				var posDX;
+				var posDY;
+				if(inter1 != null && inter2 != null) {
+					posCX = inter1.x;
+					posCY = inter1.y;
+					var _this2 = this.img_light;
+					_this2.addVertex(posCX,posCY,_this2.curR,_this2.curG,_this2.curB,_this2.curA,posCX * _this2.ma + posCY * _this2.mc + _this2.mx,posCX * _this2.mb + posCY * _this2.md + _this2.my);
+					if(b1 != b2) {
+						var posEX = 0.0;
+						var posEY = 0.0;
+						if(b1 == "AB" && b2 == "BC" || b2 == "AB" && b1 == "BC") {
+							posEX = bBX;
+							posEY = bBY;
+						}
+						if(b1 == "BC" && b2 == "CD" || b2 == "BC" && b1 == "CD") {
+							posEX = bCX;
+							posEY = bCY;
+						}
+						if(b1 == "CD" && b2 == "DA" || b2 == "CD" && b1 == "DA") {
+							posEX = bDX;
+							posEY = bDY;
+						}
+						if(b1 == "DA" && b2 == "AB" || b2 == "DA" && b1 == "AB") {
+							posEX = bAX;
+							posEY = bAY;
+						}
+						var _this3 = this.img_light;
+						_this3.addVertex(posEX,posEY,_this3.curR,_this3.curG,_this3.curB,_this3.curA,posEX * _this3.ma + posEY * _this3.mc + _this3.mx,posEX * _this3.mb + posEY * _this3.md + _this3.my);
+					}
+					posDX = inter2.x;
+					posDY = inter2.y;
+					var _this4 = this.img_light;
+					_this4.addVertex(posDX,posDY,_this4.curR,_this4.curG,_this4.curB,_this4.curA,posDX * _this4.ma + posDY * _this4.mc + _this4.mx,posDX * _this4.mb + posDY * _this4.md + _this4.my);
+				}
 			}
 		}
-		this.img_light.endFill();
+	}
+	,intersecLines: function(x1,y1,x2,y2,x3,y3,x4,y4) {
+		var intersec = null;
+		var dx1 = x1 - x2;
+		var dx2 = x3 - x4;
+		var dy1 = y1 - y2;
+		var dy2 = y3 - y4;
+		var d = dx1 * dy2 - dx2 * dy1;
+		if(d != 0) {
+			var pre = x1 * y2 - x2 * y1;
+			var post = x3 * y4 - x4 * y3;
+			var x = (pre * dx2 - post * dx1) / d;
+			var y = (pre * dy2 - post * dy1) / d;
+			var dx = x - x1;
+			var dy = y - y1;
+			var dist = Math.sqrt(dx * dx + dy * dy);
+			intersec = { x : x, y : y, dist : dist};
+		}
+		return intersec;
 	}
 	,update: function(dt) {
 		var incRot = 10 * Math.PI / 180;
@@ -4529,10 +4630,6 @@ h2d_Graphics.prototype = $extend(h2d_Drawable.prototype,{
 		this.lineR = (color >> 16 & 255) / 255.;
 		this.lineG = (color >> 8 & 255) / 255.;
 		this.lineB = (color & 255) / 255.;
-	}
-	,endFill: function() {
-		this.flush();
-		this.doFill = false;
 	}
 	,addVertex: function(x,y,r,g,b,a,u,v) {
 		if(v == null) {

@@ -12,6 +12,7 @@ import h2d.Tile;
 import hxd.App;
 import hxd.Key;
 import hxd.Res;
+import js.Lib;
 
 /**
  * ...
@@ -33,6 +34,13 @@ typedef Star =
 	var power:Int;
 }
 
+typedef Intersec =
+{
+	var x:Float;
+	var y:Float;
+	var dist:Float;
+}
+
 class Main extends App
 {
 	static public var instance:Main;
@@ -52,6 +60,8 @@ class Main extends App
 	var img_bg:Bitmap;
 	var img_path:Graphics;
 	var img_light:Graphics;
+	
+	var marginLight:Float = 256;
 	
 	var firstInc:Int = 0; // TEST
 	var isFirst = true; // TEST
@@ -134,8 +144,8 @@ class Main extends App
 		// test ---------------------------------
 		
 		img_light = new Graphics(s2d);
-		img_light.x = -256;
-		img_light.y = -256;
+		img_light.x = -marginLight;
+		img_light.y = -marginLight;
 		
 		initLevel(0);
 	}
@@ -191,45 +201,191 @@ class Main extends App
 		
 		//img_light.beginFill(color);
 		
-		// TODO
-		// calculer le point d'intersection des deux tangentes
-		// si il est dans le screen, faire un triangle
-		// sinon, dessiner un quadrilatère (si les deux tangentes touchent le même bord, ou un pentagone (si elles touchent deux bords différents - avec un coin)
-		
 		for (ent in listSolid)
 		{
-			if (ent != hero && ent.x > -256 && ent.x < s2d.width + 256 && ent.y > -256 && ent.y < s2d.height + 256)
+			if (ent != hero && ent.x > -marginLight && ent.x < s2d.width + marginLight && ent.y > -marginLight && ent.y < s2d.height + marginLight)
 			{
+				// tangents
+				// https://stackoverflow.com/a/12035653/7206230
+				
+				// props de l'entité
+				
 				var entX:Float = ent.x;
 				var entY:Float = ent.y;
 				var radius:Int = ent.radiusSolid;
 				
+				// angle entre l'étoile et l'entité
+				
 				var angle:Float = Math.atan2(entY - star.y, entX - star.x);
 				
-				var posX:Float = entX + Math.cos(angle + Math.PI / 2) * radius + 256;
-				var posY:Float = entY + Math.sin(angle + Math.PI / 2) * radius + 256;
+				// calcul les points au bout du diamètre tangent à la source de lumière
 				
-				var originX:Float = posX;
-				var originY:Float = posY;
+				var posAX:Float = entX + Math.cos(angle + Math.PI / 2) * radius + 256;
+				var posAY:Float = entY + Math.sin(angle + Math.PI / 2) * radius + 256;
+				
+				var posBX:Float = entX + Math.cos(angle - Math.PI / 2) * radius + 256;
+				var posBY:Float = entY + Math.sin(angle - Math.PI / 2) * radius + 256;
 				
 				img_light.lineStyle(5, 0xFF0000);
+				img_light.moveTo(posAX, posAY);
+				img_light.lineTo(posBX, posBY);
 				
-				img_light.moveTo(posX, posY);
+				// calcul les intersections entre les deux rayons passant par les bords de l'entité jusqu'à chaque bord de l'écran (img_ligth en fait)
 				
-				posX = entX + Math.cos(angle - Math.PI / 2) * radius + 256;
-				posY = entY + Math.sin(angle - Math.PI / 2) * radius + 256;
+				var bAX:Float = -layer_world.x - marginLight;
+				var bAY:Float = -layer_world.y - marginLight;
+				var bBX:Float = -layer_world.x + s2d.width + marginLight;
+				var bBY:Float = bAY;
+				var bCX:Float = bBX;
+				var bCY:Float = -layer_world.y + s2d.height + marginLight;
+				var bDX:Float = bAX;
+				var bDY:Float = bBX;
 				
-				img_light.lineTo(posX, posY);
+				var iAB1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bAX, bAY, bBX, bBY);
+				var iBC1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bBX, bBY, bCX, bCY);
+				var iCD1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bCX, bCY, bDX, bDY);
+				var iDA1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bDX, bDY, bAX, bAY);
 				
-				// tester si l'ombre se rétrécie ou non (si non, ne pas s'emmerder)
+				var iAB2:Intersec = intersecLines(star.x, star.y, posBX, posBY, bAX, bAY, bBX, bBY);
+				var iBC2:Intersec = intersecLines(star.x, star.y, posBX, posBY, bBX, bBY, bCX, bCY);
+				var iCD2:Intersec = intersecLines(star.x, star.y, posBX, posBY, bCX, bCY, bDX, bDY);
+				var iDA2:Intersec = intersecLines(star.x, star.y, posBX, posBY, bDX, bDY, bAX, bAY);
 				
-				//var intersecX:Float = 
+				// détermine quels bords sont touchés
 				
-				//var ang
+				var b1:String = "";
+				var b2:String = "";
+				var dist1:Float = 999999;
+				var dist2:Float = 999999;
+				
+				var inter1:Intersec = null;
+				var inter2:Intersec = null;
+				
+				if (iAB1 != null && iAB1.dist < dist1)
+				{
+					b1 = "AB";
+					inter1 = iAB1;
+				}
+				else if (iBC1 != null && iBC1.dist < dist1)
+				{
+					b1 = "BC";
+					inter1 = iBC1;
+				}
+				else if (iCD1 != null && iCD1.dist < dist1)
+				{
+					b1 = "CD";
+					inter1 = iCD1;
+				}
+				else if (iDA1 != null && iDA1.dist < dist1)
+				{
+					b1 = "DA";
+					inter1 = iDA1;
+				}
+				
+				if (iAB2 != null && iAB2.dist < dist2)
+				{
+					b2 = "AB";
+					inter2 = iAB2;
+				}
+				else if (iBC2 != null && iBC2.dist < dist2)
+				{
+					b2 = "BC";
+					inter2 = iBC2;
+				}
+				else if (iCD2 != null && iCD2.dist < dist2)
+				{
+					b2 = "CD";
+					inter2 = iCD2;
+				}
+				else if (iDA2 != null && iDA2.dist < dist2)
+				{
+					b2 = "DA";
+					inter2 = iDA2;
+				}
+				
+				var posCX:Float;
+				var posCY:Float;
+				var posDX:Float;
+				var posDY:Float;
+				
+				if (inter1 != null && inter2 != null)
+				{
+					posCX = inter1.x;
+					posCY = inter1.y;
+					
+					img_light.lineTo(posCX, posCY);
+					
+					if (b1 != b2)
+					{
+						// ajoute un coin si les deux bords touchés ne sont pas le même
+						
+						var posEX:Float = 0.0;
+						var posEY:Float = 0.0;
+						
+						if ((b1 == "AB" && b2 == "BC") || (b2 == "AB" && b1 == "BC"))
+						{
+							posEX = bBX;
+							posEY = bBY;
+						}
+						if ((b1 == "BC" && b2 == "CD") || (b2 == "BC" && b1 == "CD"))
+						{
+							posEX = bCX;
+							posEY = bCY;
+						}
+						if ((b1 == "CD" && b2 == "DA") || (b2 == "CD" && b1 == "DA"))
+						{
+							posEX = bDX;
+							posEY = bDY;
+						}
+						if ((b1 == "DA" && b2 == "AB") || (b2 == "DA" && b1 == "AB"))
+						{
+							posEX = bAX;
+							posEY = bAY;
+						}
+						
+						img_light.lineTo(posEX, posEY);
+					}
+					
+					posDX = inter2.x;
+					posDY = inter2.y;
+					
+					img_light.lineTo(posDX, posDY);
+				}
 			}
 		}
 		
-		img_light.endFill();
+		//img_light.endFill();
+	}
+	
+	// http://flassari.is/2009/04/line-line-intersection-in-as3/
+	public function intersecLines(x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float, x4:Float, y4:Float):Intersec
+	{
+		// x1/y1 : star
+		
+		var intersec:Intersec = null;
+		
+		var dx1:Float = x1 - x2;
+		var dx2:Float = x3 - x4;
+		var dy1:Float = y1 - y2;
+		var dy2:Float = y3 - y4;
+		
+		var d:Float = dx1 * dy2 - dx2 * dy1;
+		
+		if (d != 0)
+		{
+			var pre:Float = x1 * y2 - x2 * y1;
+			var post:Float = x3 * y4 - x4 * y3;
+			var x:Float = (pre * dx2 - post * dx1) / d;
+			var y:Float = (pre * dy2 - post * dy1) / d;
+			
+			var dx:Float = x - x1;
+			var dy:Float = y - y1;
+			var dist:Float = Math.sqrt(dx * dx + dy * dy);
+			
+			intersec = { x: x, y: y, dist: dist };
+		}
+		
+		return intersec;
 	}
 	
 	/*
