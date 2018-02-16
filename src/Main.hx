@@ -195,6 +195,8 @@ class Main extends App
 	
 	public function updateLight():Void
 	{
+		// TODO : precalcul pour les entités statiques les light qu'une fois
+		
 		img_light.clear();
 		
 		var color:UInt = 0x000033;
@@ -239,12 +241,22 @@ class Main extends App
 				var bCX:Float = bBX;
 				var bCY:Float = -layer_world.y + s2d.height + marginLight;
 				var bDX:Float = bAX;
-				var bDY:Float = bBX;
+				var bDY:Float = bCY;
 				
 				var iAB1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bAX, bAY, bBX, bBY);
 				var iBC1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bBX, bBY, bCX, bCY);
 				var iCD1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bCX, bCY, bDX, bDY);
 				var iDA1:Intersec = intersecLines(star.x, star.y, posAX, posAY, bDX, bDY, bAX, bAY);
+				
+				if (isFirst)
+				{
+					trace(iAB1, iBC1, iCD1, iDA1);
+				}
+				
+				if (isFirst)
+				{
+					isFirst = false;
+				}
 				
 				var iAB2:Intersec = intersecLines(star.x, star.y, posBX, posBY, bAX, bAY, bBX, bBY);
 				var iBC2:Intersec = intersecLines(star.x, star.y, posBX, posBY, bBX, bBY, bCX, bCY);
@@ -260,6 +272,8 @@ class Main extends App
 				
 				var inter1:Intersec = null;
 				var inter2:Intersec = null;
+				
+				// TODO : ne pas tenir compte des bords touché dans l'autre sens (vers la source)
 				
 				if (iAB1 != null && iAB1.dist < dist1)
 				{
@@ -358,32 +372,106 @@ class Main extends App
 	}
 	
 	// http://flassari.is/2009/04/line-line-intersection-in-as3/
+	// http://paulbourke.net/geometry/pointlineplane/
+	// http://paulbourke.net/geometry/pointlineplane/pdb.c
 	public function intersecLines(x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float, x4:Float, y4:Float):Intersec
 	{
-		// x1/y1 : star
+		// tester intersction segments :
+		// . si parallèle
+		// . si contingent
 		
 		var intersec:Intersec = null;
 		
-		var dx1:Float = x1 - x2;
-		var dx2:Float = x3 - x4;
-		var dy1:Float = y1 - y2;
-		var dy2:Float = y3 - y4;
+		var denom:Float = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+		var numA:Float = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+		var numB:Float = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
 		
-		var d:Float = dx1 * dy2 - dx2 * dy1;
+		var epsilon:Float = 5; // ?
 		
-		if (d != 0)
+		var x:Float;
+		var y:Float;
+		
+		// les deux lignes coïncident
+		if (Math.abs(numA) < epsilon && Math.abs(numB) < epsilon && Math.abs(denom) < epsilon)
 		{
-			var pre:Float = x1 * y2 - x2 * y1;
-			var post:Float = x3 * y4 - x4 * y3;
-			var x:Float = (pre * dx2 - post * dx1) / d;
-			var y:Float = (pre * dy2 - post * dy1) / d;
+			x = (x1 + x2) / 2;
+			y = (y1 + y2) / 2;
+			
+			trace("COINC");
+			
+			return { x: x, y: y, dist: 0 }; // ?
+		}
+		
+		// les deux lignes sont parallèles
+		if (Math.abs(denom) < epsilon)
+		{
+			trace("PARA");
+			
+			return null;
+		}
+		
+		var mua:Float = numA / denom;
+		var mub:Float = numB / denom;
+		
+		/*if (mua < 0 || mua > 1 || mub < 0 || mub > 1)
+		{
+			trace("?");
+			
+			return null;
+		}*/
+		
+		x = x1 + mua  * (x2 -x1);
+		y = y1 + mua  * (y2 -y1);
+		
+		// x1/y1 : star
+		// x2/y2 : entité
+		// x3/y3 : bout bord
+		// x4/y4 : bout bord
+		
+		var intersec:Intersec = null;
+		
+		//var dx1:Float = x1 - x2;
+		//var dx2:Float = x3 - x4;
+		//var dy1:Float = y1 - y2;
+		//var dy2:Float = y3 - y4;
+		
+		//var d:Float = dx1 * dy2 - dx2 * dy1;
+		//var d:Float = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+		
+		//if (d != 0)
+		//{
+			//var pre:Float = x1 * y2 - x2 * y1;
+			//var post:Float = x3 * y4 - x4 * y3;
+			//var x:Float = (pre * dx2 - post * dx1) / d;
+			//var y:Float = (pre * dy2 - post * dy1) / d;
+			
+			//var x:Float = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / d;
+			//var y:Float = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / d;
+			
+			//x = x1 + x * (x2 - x1);
+			//y = y1 + y * (y2 - y1);
 			
 			var dx:Float = x - x1;
 			var dy:Float = y - y1;
-			var dist:Float = Math.sqrt(dx * dx + dy * dy);
+			var distSI:Float = Math.sqrt(dx * dx + dy * dy); // star/intersec
 			
-			intersec = { x: x, y: y, dist: dist };
-		}
+			dx = x - x2;
+			dy = y - y2;
+			var distEI:Float = Math.sqrt(dx * dx + dy * dy); // ent/intersec
+			
+			dx = x2 - x1;
+			dy = y2 - y1;
+			var distSE:Float = Math.sqrt(dx * dx + dy * dy); // star/ent
+			
+			if (isFirst)
+				trace(x, y, distSI, distEI, distSI, distSI + distEI); 
+			
+			if (distSI + distEI == distSI) // test si l'entité est entre l'étoile et l'intersection
+			{
+				trace("OK");
+				intersec = { x: x, y: y, dist: distEI };
+			}
+		//}
 		
 		return intersec;
 	}
