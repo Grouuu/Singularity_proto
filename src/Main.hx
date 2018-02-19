@@ -251,10 +251,6 @@ class Main extends App
 				if (isFirst)
 				{
 					trace(iAB1, iBC1, iCD1, iDA1);
-				}
-				
-				if (isFirst)
-				{
 					isFirst = false;
 				}
 				
@@ -374,6 +370,7 @@ class Main extends App
 	// http://flassari.is/2009/04/line-line-intersection-in-as3/
 	// http://paulbourke.net/geometry/pointlineplane/
 	// http://paulbourke.net/geometry/pointlineplane/pdb.c
+	// https://github.com/adriand/intercept-calculator/blob/master/intercept_math.rb
 	public function intersecLines(x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float, x4:Float, y4:Float):Intersec
 	{
 		// tester intersction segments :
@@ -382,7 +379,15 @@ class Main extends App
 		
 		var intersec:Intersec = null;
 		
-		var denom:Float = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+		
+		var slope:Float = (y2 - y1) / (x2 - x1); // (y2 - y1) / (x2 - x1)
+		var b:Float = y1 - (slope * x1); // y = mx + b
+		
+		var y:Float = slope * x3 + b;
+		var x:Float = x3;
+		
+		
+		/*var denom:Float = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
 		var numA:Float = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
 		var numB:Float = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3);
 		
@@ -413,12 +418,12 @@ class Main extends App
 		var mua:Float = numA / denom;
 		var mub:Float = numB / denom;
 		
-		/*if (mua < 0 || mua > 1 || mub < 0 || mub > 1)
-		{
-			trace("?");
-			
-			return null;
-		}*/
+		//if (mua < 0 || mua > 1 || mub < 0 || mub > 1)
+		//{
+			//trace("?");
+			//
+			//return null;
+		//}
 		
 		x = x1 + mua  * (x2 -x1);
 		y = y1 + mua  * (y2 -y1);
@@ -471,7 +476,7 @@ class Main extends App
 				trace("OK");
 				intersec = { x: x, y: y, dist: distEI };
 			}
-		//}
+		//}*/
 		
 		return intersec;
 	}
