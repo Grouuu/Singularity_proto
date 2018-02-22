@@ -327,7 +327,7 @@ class Main extends App
 					
 					if (b1 != b2)
 					{
-						// ajoute un coin si les deux bords touchés ne sont pas le même
+						// ajoute un coin si les deux bords touchés ne sont pas les mêmes
 						
 						var posEX:Float = 0.0;
 						var posEY:Float = 0.0;
@@ -371,6 +371,7 @@ class Main extends App
 	// http://paulbourke.net/geometry/pointlineplane/
 	// http://paulbourke.net/geometry/pointlineplane/pdb.c
 	// https://github.com/adriand/intercept-calculator/blob/master/intercept_math.rb
+	// https://stackoverflow.com/questions/1585525/how-to-find-the-intersection-point-between-a-line-and-a-rectangle/22169729#22169729
 	public function intersecLines(x1:Float, y1:Float, x2:Float, y2:Float, x3:Float, y3:Float, x4:Float, y4:Float):Intersec
 	{
 		// tester intersction segments :
@@ -383,8 +384,10 @@ class Main extends App
 		var slope:Float = (y2 - y1) / (x2 - x1); // (y2 - y1) / (x2 - x1)
 		var b:Float = y1 - (slope * x1); // y = mx + b
 		
-		var y:Float = slope * x3 + b;
-		var x:Float = x3;
+		// calcul le slope, puis calcul avec un x/y correspond à un bord de bound, si dans le bon sens, puis distance toussa
+		
+		//var y:Float = slope * x3 + b;
+		//var x:Float = x3;
 		
 		
 		/*var denom:Float = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
